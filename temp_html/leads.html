@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-variant": "#dee4e1",
+                  "on-secondary-container": "#231791",
+                  "inverse-surface": "#2c3130",
+                  "surface-container": "#eaefed",
+                  "surface-dim": "#d6dbd9",
+                  "on-secondary-fixed": "#0f0069",
+                  "on-error": "#ffffff",
+                  "on-background": "#171d1c",
+                  "error-container": "#ffdad6",
+                  "primary-fixed-dim": "#6bd8cb",
+                  "primary-container": "#008378",
+                  "surface-bright": "#f5faf8",
+                  "error": "#ba1a1a",
+                  "tertiary": "#924628",
+                  "secondary": "#544fc0",
+                  "tertiary-container": "#b05e3d",
+                  "on-tertiary-container": "#fffbff",
+                  "on-primary-container": "#f4fffc",
+                  "outline": "#6d7a77",
+                  "surface-container-lowest": "#ffffff",
+                  "primary-fixed": "#89f5e7",
+                  "on-secondary": "#ffffff",
+                  "on-surface-variant": "#3d4947",
+                  "on-tertiary": "#ffffff",
+                  "tertiary-fixed": "#ffdbce",
+                  "surface-tint": "#006a61",
+                  "on-surface": "#171d1c",
+                  "on-tertiary-fixed-variant": "#773215",
+                  "secondary-fixed": "#e2dfff",
+                  "on-error-container": "#93000a",
+                  "on-primary": "#ffffff",
+                  "secondary-fixed-dim": "#c3c0ff",
+                  "outline-variant": "#bcc9c6",
+                  "on-primary-fixed-variant": "#005049",
+                  "surface": "#f5faf8",
+                  "surface-container-high": "#e4e9e7",
+                  "on-secondary-fixed-variant": "#3b35a7",
+                  "surface-container-low": "#f0f5f2",
+                  "inverse-primary": "#6bd8cb",
+                  "primary": "#00685f",
+                  "surface-container-highest": "#dee4e1",
+                  "secondary-container": "#8f8bff",
+                  "tertiary-fixed-dim": "#ffb59a",
+                  "on-tertiary-fixed": "#370e00",
+                  "on-primary-fixed": "#00201d",
+                  "background": "#f5faf8",
+                  "inverse-on-surface": "#edf2f0",
+                  "wa-green": "#25D366",
+                  "wa-light": "#DCF8C6"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.25rem",
+                  "lg": "0.5rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "md": "24px",
+                  "lg": "40px",
+                  "xs": "8px",
+                  "gutter": "24px",
+                  "container-max": "1280px",
+                  "base": "4px",
+                  "sm": "16px",
+                  "xl": "64px"
+          },
+          "fontFamily": {
+                  "label-xs": ["Inter"],
+                  "h2": ["Inter"],
+                  "h3": ["Inter"],
+                  "body-md": ["Inter"],
+                  "label-sm": ["Inter"],
+                  "h1": ["Inter"],
+                  "body-lg": ["Inter"]
+          },
+          "fontSize": {
+                  "label-xs": ["12px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                  "h2": ["30px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "h3": ["24px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                  "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                  "label-sm": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                  "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                  "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>.glass-panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2)
+    }
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px
+    }
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent
+    }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 104, 95, 0.1);
+    border-radius: 10px
+    }
+.wa-bg {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCNmqA_VK7W8HJ23HnbB8jB56pT1KmNPntKkX_KKYDV9z58148R1GKhTAINeITzqmvKaLVEqtmXnCrq4gvsn8t-yJW7MTd49Yuvk194sY4Ts3whKpvSzuKdpQOt_jFFQL-dXGge3e9aptgIrMiJBCOInwWpMyT3j_9sCZCI732TyPQsmnOGco-yxnXVhUAzMLNVobTMAJb2vPf7SdU4YEdpdAz5FNN1I2sDN_EawPAJqOrl8AvNXlRJpYZnlMIFilQte_puMeF55H2j);
+    background-repeat: repeat;
+    opacity: 0.06;
+    position: absolute;
+    inset: 0;
+    pointer-events: none
+    }</style>
+</head>
+<body class="bg-background font-body-md text-on-surface overflow-hidden">
+<!-- Side Navigation Bar -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-slate-200/30 bg-white/80 backdrop-blur-xl flex flex-col py-6 px-4 gap-2 z-50 shadow-xl">
+<div class="mb-8 px-2">
+<h1 class="text-lg font-black text-slate-900 font-h1 tracking-tight">LeadsArk</h1>
+<p class="text-xs text-slate-500 font-label-xs">Enterprise CRM</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-slate-100/50 group text-slate-600" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="font-label-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 bg-white/50 text-wa-green border-l-4 border-wa-green shadow-sm font-semibold" href="#">
+<span class="material-symbols-outlined text-xl">person_search</span>
+<span class="font-label-sm">Leads</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-slate-100/50 group text-slate-600" href="#">
+<span class="material-symbols-outlined text-xl">chat_bubble</span>
+<span class="font-label-sm">Conversations</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-slate-100/50 group text-slate-600" href="#">
+<span class="material-symbols-outlined text-xl">event_repeat</span>
+<span class="font-label-sm">Follow-ups</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-slate-100/50 group text-slate-600" href="#">
+<span class="material-symbols-outlined text-xl">analytics</span>
+<span class="font-label-sm">Analytics</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-100">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-wa-green to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-label-sm mb-4">
+<span class="material-symbols-outlined">add_circle</span>
+        Add New Lead
+      </button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100/50 transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-sm">Logout</span>
+</a>
+</div>
+</aside>
+<!-- Top App Bar -->
+<header class="fixed top-0 right-0 left-64 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200/20 z-40 flex justify-between items-center px-6 shadow-[0_10px_30px_-5px_rgba(55,48,163,0.08)]">
+<div class="flex items-center gap-4 bg-surface-container-low px-4 py-2 rounded-full w-96 border border-slate-200/50">
+<span class="material-symbols-outlined text-slate-400">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-400" placeholder="Search leads, chats, or tasks..." type="text"/>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-slate-500 hover:text-wa-green transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-slate-500 hover:text-wa-green transition-colors">
+<span class="material-symbols-outlined">mail</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-sm font-semibold text-slate-900 leading-tight">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 font-label-xs uppercase tracking-wider">Account Manager</p>
+</div>
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" data-alt="A professional headshot of a Hispanic male executive in his mid-thirties, wearing a modern charcoal blazer. He is smiling warmly against a blurred office background with soft natural lighting and teal accents. The visual style is high-definition photography with a shallow depth of field, reflecting a clean, corporate yet approachable professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu8g-GHzhv4o2GK9VNrszxRI9QaAxROSdGPQ1ArMmV4rE55Ro7Kk15q9T1p_J0nNNRn4FFnWQ1R9k_eN3G9Y82BShX3aA3-a4CebpsSpNQIMVchBM7_6KHj-2-lG8c2mFGPalUqHaum25MG0GqOivcNsfCGoIiPfujJXiNgtlXrpzIvhLkdpbt2fad5YJT4ljrZrUT3CmX9I4PW8QKfjKFfb6WponBDDusvaWXEmayQzbJwbFjwbD5MjQ9LeMBp8L1Qi3SHRtiHaGs"/>
+</div>
+</div>
+</header>
+<!-- Main Content Layout -->
+<main class="pt-16 pl-64 h-screen flex">
+<!-- Column 1: Lead List (30%) -->
+<section class="w-[30%] border-r border-slate-200/30 flex flex-col h-full bg-surface-container-lowest/50 overflow-hidden">
+<div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white/50">
+<h2 class="font-h3 text-lg font-bold text-slate-800">Recent Leads</h2>
+<button class="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<!-- Lead Item Active -->
+<div class="relative p-5 border-b border-slate-100 bg-white shadow-sm hover:px-6 transition-all duration-300 group cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-wa-green"></div>
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-bold text-slate-900 text-base">Sarah Jenkins</h3>
+<span class="bg-red-500 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">local_fire_department</span> Hot Lead
+        </span>
+</div>
+<p class="text-xs text-slate-500 font-bold mb-2">CloudScale Systems</p>
+<p class="text-sm text-slate-600 line-clamp-1 italic">"Can you send over the pricing tier..."</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] text-slate-400 font-semibold">2 mins ago</span>
+<div class="flex items-center gap-2">
+<span class="bg-wa-green text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">3</span>
+<span class="material-symbols-outlined text-wa-green text-sm" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+</div>
+</div>
+</div>
+<!-- Lead Item Overdue -->
+<div class="p-5 border-b border-slate-100 hover:bg-white/80 hover:px-6 transition-all duration-300 group cursor-pointer bg-red-50/20">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-bold text-slate-800">Marcus Thorne</h3>
+<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">priority_high</span> Warm
+        </span>
+</div>
+<p class="text-xs text-slate-500 font-bold mb-2">Vertex Media Group</p>
+<span class="inline-flex items-center gap-1 bg-error text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase mb-2">
+<span class="material-symbols-outlined text-[11px]">alarm</span> Needs Attention
+      </span>
+<p class="text-sm text-slate-500 line-clamp-1">I will check with my department head...</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] text-error font-black uppercase">Overdue: 2h</span>
+</div>
+</div>
+<!-- Lead Item -->
+<div class="p-5 border-b border-slate-100 hover:bg-white/80 hover:px-6 transition-all duration-300 group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-bold text-slate-800 text-base">Elena Rodriguez</h3>
+<span class="bg-slate-200 text-slate-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">ac_unit</span> Cold
+        </span>
+</div>
+<p class="text-xs text-slate-500 font-bold mb-2">NexGen Logistics</p>
+<p class="text-sm text-slate-500 line-clamp-1">Not interested at this moment...</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] text-slate-400 font-semibold">3 hours ago</span>
+</div>
+</div>
+<!-- Lead Item -->
+<div class="p-5 border-b border-slate-100 hover:bg-white/80 hover:px-6 transition-all duration-300 group cursor-pointer">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-bold text-slate-800 text-base">David Chang</h3>
+<span class="bg-red-500 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[12px]">local_fire_department</span> Hot
+        </span>
+</div>
+<p class="text-xs text-slate-500 font-bold mb-2">Innovate Labs</p>
+<p class="text-sm text-slate-500 line-clamp-1">Ready to sign the contract...</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] text-slate-400 font-semibold">5 hours ago</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Column 2: Chat Interface (45%) -->
+<section class="w-[45%] flex flex-col h-full bg-[#E5DDD5] relative overflow-hidden">
+<div class="wa-bg"></div>
+<!-- Chat Header -->
+<div class="px-6 py-4 border-b border-slate-200/50 flex items-center justify-between bg-white/95 backdrop-blur-sm z-10 shadow-sm">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img alt="Sarah Jenkins Profile" class="w-11 h-11 rounded-full object-cover border-2 border-wa-green/20" data-alt="A professional and friendly portrait of a female corporate executive in her late 20s, with a warm smile. She is wearing a modern teal blouse and has her hair neatly styled. The lighting is bright and airy with a soft-focus office background, embodying a professional but communicative persona in a modern business environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9U14qWLAAPD_Gr3_6JAhRTpWYhIKt6d1q2Bcrz3aYdzl3KGmc9J0vsEpFSUDFjqcLfAYN9n0ZkYqgDQ_6Rr-6sVD0c-Gbb2VXQswg3wqhpqjzLUlTeco_Z58Aw92hcj73C0JrM-b5MJDgc5Xt-2TvAaSkcXxcLrQL-xRNHkCFa294qHAN0boaDHhp8C1vDPiaz4GH4YK19IfchdC6tNU3ijOIflEmTOaaoVBBHLmAMyFY4UT33587OJVq78JrliU3gjRf51yXKQT2"/>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-wa-green border-2 border-white rounded-full"></span>
+</div>
+<div>
+<h3 class="font-bold text-slate-900 leading-none">Sarah Jenkins</h3>
+<p class="text-xs text-wa-green font-bold mt-1">online</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+<button class="p-2.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+<span class="material-symbols-outlined">call</span>
+</button>
+<button class="p-2.5 rounded-full hover:bg-slate-100 text-slate-500 transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Chat Messages -->
+<div class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-4 z-10">
+<div class="flex justify-center my-4">
+<span class="bg-[#D1E4EF]/80 px-4 py-1 rounded-lg text-[11px] font-bold text-slate-600 uppercase tracking-widest shadow-sm">Yesterday</span>
+</div>
+<!-- Received Message -->
+<div class="flex items-end gap-2 max-w-[85%]">
+<div class="bg-white p-3 rounded-2xl rounded-bl-none shadow-sm relative">
+<p class="text-sm text-slate-800 leading-relaxed pr-8">Hi Alex, we reviewed the initial proposal you sent last Tuesday. The team is quite impressed with the automation features.</p>
+<span class="absolute bottom-1 right-2 text-[10px] text-slate-400">16:12</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex flex-row-reverse items-end gap-2 max-w-[85%] ml-auto">
+<div class="bg-wa-light p-3 rounded-2xl rounded-br-none shadow-sm relative">
+<p class="text-sm text-slate-800 leading-relaxed pr-12">That's fantastic to hear, Sarah! We designed those features specifically for teams looking to reduce manual entry by 40%.</p>
+<div class="absolute bottom-1 right-2 flex items-center gap-0.5">
+<span class="text-[10px] text-slate-500">16:15</span>
+<span class="material-symbols-outlined text-[16px] text-blue-500" style="font-variation-settings: 'FILL' 1;">done_all</span>
+</div>
+</div>
+</div>
+<div class="flex justify-center my-4">
+<span class="bg-[#D1E4EF]/80 px-4 py-1 rounded-lg text-[11px] font-bold text-slate-600 uppercase tracking-widest shadow-sm">Today</span>
+</div>
+<!-- Received Message -->
+<div class="flex items-end gap-2 max-w-[85%]">
+<div class="bg-white p-3 rounded-2xl rounded-bl-none shadow-sm relative">
+<p class="text-sm text-slate-800 leading-relaxed pr-8">Can you send over the pricing tier for the enterprise plan? We are looking to scale by next month and need to finalize the budget today.</p>
+<span class="absolute bottom-1 right-2 text-[10px] text-slate-400">09:45</span>
+</div>
+</div>
+<!-- Typing Indicator -->
+<div class="flex items-center gap-3">
+<div class="flex gap-1 p-2.5 bg-white rounded-2xl shadow-sm">
+<div class="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce"></div>
+<div class="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+<div class="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+</div>
+<span class="text-[11px] text-slate-500 font-bold italic">Sarah is typing...</span>
+</div>
+</div>
+<!-- Chat Input -->
+<div class="p-4 bg-[#F0F2F5] z-10 flex items-center gap-2">
+<button class="p-2 text-slate-500 hover:text-wa-green transition-colors">
+<span class="material-symbols-outlined">mood</span>
+</button>
+<button class="p-2 text-slate-500 hover:text-wa-green transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<div class="flex-1">
+<input class="w-full bg-white border-none rounded-xl focus:ring-0 text-sm px-4 py-3 text-slate-800 placeholder:text-slate-400 shadow-sm" placeholder="Type a message..." type="text"/>
+</div>
+<button class="bg-wa-green text-white p-3.5 rounded-full shadow-lg hover:bg-[#1ebe57] transition-all flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</section>
+<!-- Column 3: Lead Details (25%) -->
+<section class="w-[25%] border-l border-slate-200/30 flex flex-col h-full bg-surface-container-low overflow-hidden">
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+<!-- Profile Header -->
+<div class="text-center">
+<div class="relative inline-block">
+<img alt="Sarah Jenkins Profile Large" class="w-28 h-28 rounded-full object-cover border-4 border-white shadow-xl mb-4" data-alt="A detailed portrait of a female executive in her late 20s, smiling confidently. She is set against a brightly lit, modern architectural interior featuring soft glass textures and professional teal lighting. The aesthetic is clean, high-end, and minimalist, emphasizing clarity and professional trustworthiness in a high-performance business setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8w55yLZOT9WFd_dkcZ-6pyFATgCcI2Jjyz9bRT_P5QTX_ChOa1rLNMFqSn_Z2E7Os3iuG3InZJB-Ob4kZ_yeKAwEi_EYFXwJj_fkOprBPUMUiey8DvDFmETjWfwpd3uI0TiroH18n1tP0W2vfqF_fBpAcaan3Z2bwedjU84zsutbvxGhOcL6yVtM_xwlouF35qLPL1i9n3hcEfmuH9iLgqAt9QnmNFB0P9pbPop09J98XPO6UIYXw2cGSunH7UARX6EZh8gDdgzZn"/>
+<span class="absolute bottom-5 right-2 bg-wa-green text-white p-1 rounded-full border-2 border-white shadow-lg">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+</span>
+</div>
+<h2 class="font-h2 text-2xl font-black text-slate-900 leading-tight">Sarah Jenkins</h2>
+<p class="text-sm font-bold text-wa-green uppercase tracking-wider">COO @ CloudScale</p>
+</div>
+<!-- Primary Action Buttons -->
+<div class="grid grid-cols-1 gap-4">
+<button class="group w-full flex items-center justify-between px-6 py-4 bg-wa-green text-white rounded-2xl shadow-lg hover:shadow-wa-green/30 hover:-translate-y-0.5 transition-all active:scale-95">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<div class="text-left">
+<p class="text-xs font-black uppercase opacity-80 leading-none mb-1">Send Instant</p>
+<p class="text-lg font-black leading-none">WhatsApp Reply</p>
+</div>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</button>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex flex-col items-center justify-center gap-2 py-4 bg-white text-slate-800 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-wa-green/30 hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-2xl text-wa-green">call</span>
+<span class="text-xs font-black uppercase tracking-tighter">Call Now</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 py-4 bg-white text-slate-800 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-wa-green/30 hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-2xl text-wa-green">mail</span>
+<span class="text-xs font-black uppercase tracking-tighter">Send Email</span>
+</button>
+</div>
+<button class="w-full flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-2xl shadow-xl hover:shadow-slate-500/30 transition-all font-black text-sm uppercase tracking-widest">
+<span class="material-symbols-outlined text-wa-green" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+        Mark as Converted
+      </button>
+</div>
+<!-- Follow-up System -->
+<div class="space-y-4 pt-2">
+<div class="glass-panel p-5 rounded-2xl border-wa-green/20 shadow-md relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-wa-green opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-wa-green"></span>
+</span>
+</div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-wa-green font-bold">timer</span>
+<span class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Next Follow-up</span>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-3xl font-black text-slate-900 tracking-tighter">05:22:14</p>
+<span class="text-[10px] font-bold text-wa-green uppercase">Today, 3 PM</span>
+</div>
+<p class="text-xs text-slate-500 mt-2 font-medium">Follow up on Enterprise pricing approval via WhatsApp.</p>
+</div>
+<!-- Interaction Timeline -->
+<div class="pt-2">
+<div class="flex justify-between items-center mb-6">
+<h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Activity Timeline</h4>
+<button class="text-wa-green font-black text-[10px] uppercase">Filter</button>
+</div>
+<div class="space-y-6 relative ml-2">
+<div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-200"></div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-wa-green text-white flex items-center justify-center z-10 ring-4 ring-surface-container-low">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">chat</span>
+</div>
+<div class="flex-1">
+<p class="text-[11px] font-black text-slate-900 uppercase">WhatsApp Received</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Today, 09:45 AM</p>
+<p class="text-xs text-slate-600 mt-1 italic line-clamp-1 bg-white/50 p-2 rounded-lg border border-slate-100">"Can you send over pricing..."</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-error text-white flex items-center justify-center z-10 ring-4 ring-surface-container-low">
+<span class="material-symbols-outlined text-[14px]">notifications_active</span>
+</div>
+<div class="flex-1">
+<p class="text-[11px] font-black text-error uppercase">Action Overdue</p>
+<p class="text-[10px] text-error/60 font-black uppercase tracking-tighter">Yesterday, 5:00 PM</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-slate-400 text-white flex items-center justify-center z-10 ring-4 ring-surface-container-low">
+<span class="material-symbols-outlined text-[14px]">mail</span>
+</div>
+<div class="flex-1">
+<p class="text-[11px] font-black text-slate-700 uppercase">Proposal Sent</p>
+<p class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">May 12, 11:20 AM</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Info -->
+<div class="p-6 bg-white/50 border-t border-slate-200/50">
+<div class="flex items-center justify-between text-[11px] text-slate-400 font-black uppercase tracking-widest">
+<span>Lead Quality</span>
+<span class="text-wa-green">98% Match</span>
+</div>
+</div>
+</section>
+</main>
+</body></html>

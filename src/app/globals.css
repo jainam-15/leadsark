@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00685F;
+  --color-wa-green: #25D366;
+  --color-wa-light: #DCF8C6;
+  
+  --color-surface-container-low: #f0f5f2;
+  --color-surface-container-lowest: #ffffff;
+  --color-error: #ba1a1a;
+
+  --spacing-md: 24px;
+  --spacing-lg: 40px;
+  --spacing-xs: 8px;
+  --spacing-gutter: 24px;
+  --spacing-container-max: 1280px;
+  --spacing-base: 4px;
+  --spacing-sm: 16px;
+  --spacing-xl: 64px;
+
+  --font-inter: "Inter", sans-serif;
+  
+  --text-label-xs: 12px;
+  --text-label-xs--line-height: 1.2;
+  --text-label-xs--font-weight: 600;
+
+  --text-h2: 30px;
+  --text-h2--line-height: 1.3;
+  --text-h2--letter-spacing: -0.01em;
+  --text-h2--font-weight: 600;
+
+  --text-h3: 24px;
+  --text-h3--line-height: 1.4;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 600;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.5;
+  --text-body-md--font-weight: 400;
+
+  --text-label-sm: 14px;
+  --text-label-sm--line-height: 1.4;
+  --text-label-sm--letter-spacing: 0.01em;
+  --text-label-sm--font-weight: 500;
+
+  --text-h1: 48px;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h1--font-weight: 700;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-lg--font-weight: 400;
+}
+
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #111827;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 10px 30px -5px rgba(55, 48, 163, 0.08);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 104, 95, 0.1);
+    border-radius: 10px;
+  }
+  
+  .wa-bg {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCNmqA_VK7W8HJ23HnbB8jB56pT1KmNPntKkX_KKYDV9z58148R1GKhTAINeITzqmvKaLVEqtmXnCrq4gvsn8t-yJW7MTd49Yuvk194sY4Ts3whKpvSzuKdpQOt_jFFQL-dXGge3e9aptgIrMiJBCOInwWpMyT3j_9sCZCI732TyPQsmnOGco-yxnXVhUAzMLNVobTMAJb2vPf7SdU4YEdpdAz5FNN1I2sDN_EawPAJqOrl8AvNXlRJpYZnlMIFilQte_puMeF55H2j);
+    background-repeat: repeat;
+    opacity: 0.06;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+}
