@@ -34,13 +34,13 @@ export interface AdminBusiness {
 }
 
 export function useAdmin() {
-  const { user } = useAuth();
+  const { role, loading: authLoading } = useAuth();
   const [businesses, setBusinesses] = useState<AdminBusiness[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchAdminData = async () => {
-    if (user?.role !== 'admin') return;
+    if (role !== 'admin') return;
     setLoading(true);
 
     try {
@@ -61,10 +61,15 @@ export function useAdmin() {
   };
 
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (authLoading) return;
+
+    if (role === 'admin') {
       fetchAdminData();
+    } else {
+      // If auth is done and not admin, stop loading immediately
+      setLoading(false);
     }
-  }, [user]);
+  }, [role, authLoading]);
 
   const updateSubscription = async (businessId: string, planId: string, durationDays: number, status: string = 'active') => {
     try {
