@@ -144,10 +144,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const initAuth = async () => {
+      // Safety timeout: ensure loading state is cleared even if Supabase hangs
+      const timeoutId = setTimeout(() => {
+        if (loading) {
+          console.warn("[Auth] Initialization timeout. Forcing loading state to false.");
+          setLoading(false);
+        }
+      }, 5000);
+
       try {
         setLoading(true);
         setError(null);
         
+        console.log("[Auth] Starting initialization...");
         // 1. Get initial session
         const { data: { session: initialSession }, error: sessionError } = await supabase!.auth.getSession();
         
@@ -157,27 +166,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (initialSession) {
+          console.log("[Auth] Session found, validating...");
           // 2. Validate session with getUser (more secure)
           const { data: { user: validatedUser }, error: userError } = await supabase!.auth.getUser();
           
           if (userError || !validatedUser) {
-            console.warn("[Auth] Session invalid or user not found. Clearing.");
+            console.warn("[Auth] Session invalid or user not found. Clearing state.");
             await supabase!.auth.signOut();
             await handleAuthEvent('SIGNED_OUT', null);
           } else {
-            console.log("[Auth] Session validated");
+            console.log("[Auth] Session validated successfully for:", validatedUser.email);
             await handleAuthEvent('INITIAL_SESSION', initialSession);
           }
         } else {
-          console.log("[Auth] No initial session");
+          console.log("[Auth] No initial session found.");
           setLoading(false);
         }
       } catch (err: any) {
-        console.error("[Auth] Initialization error:", err);
+        console.error("[Auth] Initialization critical error:", err);
         setError(err.message);
         setLoading(false);
       } finally {
+        clearTimeout(timeoutId);
         setLoading(false);
+        console.log("[Auth] Initialization sequence complete.");
       }
     };
 
