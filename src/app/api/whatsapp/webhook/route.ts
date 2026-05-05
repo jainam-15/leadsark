@@ -13,23 +13,33 @@ export async function GET(req: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
+  // Logging for debugging (Safe: doesn't log challenge, only token for verification)
+  console.log(`[WhatsApp Webhook] Incoming GET request. Mode: ${mode}, Token: ${token}`);
+
   if (mode === "subscribe" && token) {
-    // Note: In a multi-tenant setup, Meta sends a single webhook for all businesses.
-    // We should ideally verify against a global webhook token or check if any business has this token.
-    // For simplicity and security, we'll check if at least one business has this verify_token.
+    // 1. Primary Check: Global Token from Environment Variable
+    const globalToken = process.env.WHATSAPP_VERIFY_TOKEN || "leadsark_secure_token";
+    
+    if (token === globalToken && challenge) {
+      console.log("[WhatsApp Webhook] Verification successful (Global Token)");
+      return new Response(challenge, { status: 200 });
+    }
+
+    // 2. Fallback Check: Multi-tenant Database Lookup
+    // Check if at least one business has this specific verify_token configured.
     const { data: secrets, error } = await supabaseAdmin
       .from('whatsapp_secrets')
       .select('verify_token')
       .eq('verify_token', token)
       .limit(1);
 
-    if (!error && secrets && secrets.length > 0) {
-      console.log("[WhatsApp Webhook] Verification successful");
+    if (!error && secrets && secrets.length > 0 && challenge) {
+      console.log("[WhatsApp Webhook] Verification successful (DB Lookup)");
       return new Response(challenge, { status: 200 });
     }
   }
 
-  console.error("[WhatsApp Webhook] Verification failed");
+  console.error(`[WhatsApp Webhook] Verification failed. Received Token: "${token}", Mode: "${mode}"`);
   return new Response("Forbidden", { status: 403 });
 }
 
