@@ -10,6 +10,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
 
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Admin client not initialized" }, { status: 500 });
+  }
+
   try {
     const [
       { data: business, error: bError },

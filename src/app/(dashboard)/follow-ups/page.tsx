@@ -3,11 +3,11 @@
 import { useFollowups } from "@/hooks/useFollowups";
 
 export default function FollowUpsPage() {
-  const { followUps, loading, toggleComplete } = useFollowups();
+  const { followUps, loading, toggleComplete, updateFollowupStatus } = useFollowups();
 
   const overdue = followUps.filter(f => f.isOverdue && f.status === 'pending');
   const upcoming = followUps.filter(f => !f.isOverdue && f.status === 'pending');
-  const completed = followUps.filter(f => f.status === 'sent');
+  const completed = followUps.filter(f => f.status === 'sent' || f.status === 'completed');
 
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading follow-ups...</div>;
@@ -109,7 +109,7 @@ export default function FollowUpsPage() {
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-slate-500 line-through">{f.lead?.name}</h3>
               </div>
-              <p className="text-xs text-slate-400 italic">Sent on {new Date(f.sent_at || f.created_at).toLocaleString()}</p>
+              <p className="text-xs text-slate-400 italic">Sent on {f.sent_at || f.created_at ? new Date(f.sent_at || f.created_at as string).toLocaleString() : 'Unknown date'}</p>
             </div>
           ))}
         </div>

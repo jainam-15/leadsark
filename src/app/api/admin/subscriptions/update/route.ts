@@ -9,6 +9,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status });
   }
 
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Admin client not initialized" }, { status: 500 });
+  }
+
   try {
     const { businessId, planId, durationDays, status, notes } = await req.json();
 

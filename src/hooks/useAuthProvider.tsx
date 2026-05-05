@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     try {
       // 1. Fetch CURRENT USER profile only (Safe/Non-recursive)
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase!
         .from('profiles')
         .select('business_id, role')
         .eq('id', supabaseUser.id)
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         
         if (result.success) {
-          const { data: refreshed } = await supabase
+          const { data: refreshed } = await supabase!
             .from('profiles')
             .select('business_id, role')
             .eq('id', supabaseUser.id)
@@ -106,11 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const timeout = setTimeout(() => setLoading(false), 10000);
       
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
         if (sessionError) {
           if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('invalid_refresh_token')) {
             console.warn("Auth: Session expired or invalid refresh token. Clearing session.");
-            await supabase.auth.signOut();
+            await supabase!.auth.signOut();
             clearCookie();
             setUser(null);
           } else {
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, session) => {
       try {
         if (session) {
           updateCookie(session.access_token);

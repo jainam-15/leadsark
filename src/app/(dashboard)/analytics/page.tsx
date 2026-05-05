@@ -17,7 +17,7 @@ export default function Analytics() {
   const qualifiedPct = totalLeads ? Math.round((qualified / totalLeads) * 100) : 0;
   const convertedPct = totalLeads ? ((converted / totalLeads) * 100).toFixed(1) : '0';
 
-  const completedFollowups = followUps.filter(f => f.completed).length;
+  const completedFollowups = followUps.filter(f => f.status === 'completed').length;
   const totalFollowups = followUps.length;
   const followupRate = totalFollowups ? Math.round((completedFollowups / totalFollowups) * 100) : 0;
 

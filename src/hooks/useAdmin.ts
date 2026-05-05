@@ -4,9 +4,11 @@ import { useAuth } from './useAuth';
 export interface AdminStats {
   totalBusinesses: number;
   activeSubscriptions: number;
+  activePaidUsers: number;
   trialUsers: number;
   expiredSubscriptions: number;
   expiringSoon: number;
+  revenueEstimate: number;
 }
 
 export interface AdminBusiness {
@@ -23,6 +25,7 @@ export interface AdminBusiness {
     status: string;
     start_date: string;
     end_date: string;
+    updated_at?: string;
   };
   whatsapp?: {
     status: string;

@@ -1,6 +1,6 @@
 import { PLANS, PlanId } from "@/config/plans";
 
-export function getDaysRemaining(endDate: string | Date | null): number {
+export function getDaysRemaining(endDate: string | Date | null | undefined): number {
   if (!endDate) return 0;
   const end = new Date(endDate);
   const now = new Date();
@@ -9,14 +9,14 @@ export function getDaysRemaining(endDate: string | Date | null): number {
   return Math.max(0, diffDays);
 }
 
-export function isExpired(endDate: string | Date | null): boolean {
+export function isExpired(endDate: string | Date | null | undefined): boolean {
   if (!endDate) return true;
   const end = new Date(endDate);
   const now = new Date();
   return now > end;
 }
 
-export function isExpiringSoon(endDate: string | Date | null, withinDays = 3): boolean {
+export function isExpiringSoon(endDate: string | Date | null | undefined, withinDays = 3): boolean {
   const remaining = getDaysRemaining(endDate);
   return remaining > 0 && remaining <= withinDays;
 }

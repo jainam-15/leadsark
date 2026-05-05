@@ -39,8 +39,10 @@ export async function shouldTriggerAutoReply(
     return { shouldReply: false, reason: 'Subscription inactive' };
   }
 
+  if (!supabase) return { shouldReply: false, reason: 'Supabase not configured' };
+
   // 1. Fetch Business Settings & Business Name
-  const { data: bizData, error: bError } = await supabase
+  const { data: bizData, error: bError } = await supabase!
     .from('businesses')
     .select('name, settings!inner(*)')
     .eq('id', businessId)
@@ -70,7 +72,7 @@ export async function shouldTriggerAutoReply(
   const isOutsideWorkingHours = currentLocalTime < (startH * 60 + startM) || currentLocalTime > (endH * 60 + endM);
 
   // 3. Find or Create Lead
-  let { data: lead } = await supabase
+  let { data: lead } = await supabase!
     .from('leads')
     .select('id, name, is_blocked, is_personal, automation_paused, conversation_state')
     .eq('business_id', businessId)
@@ -97,7 +99,7 @@ export async function shouldTriggerAutoReply(
       return { shouldReply: false, reason: 'Mode is new_leads_only' };
     }
 
-    const { data: flowStep } = await supabase
+    const { data: flowStep } = await supabase!
       .from('automation_flows')
       .select('reply_template_id, next_step')
       .eq('business_id', businessId)
@@ -108,7 +110,7 @@ export async function shouldTriggerAutoReply(
       templateId = flowStep.reply_template_id;
     } else {
       // Fallback: check if message matches a specific flow trigger
-      const { data: triggeredFlow } = await supabase
+      const { data: triggeredFlow } = await supabase!
         .from('automation_flows')
         .select('reply_template_id, next_step')
         .eq('business_id', businessId)
@@ -128,7 +130,7 @@ export async function shouldTriggerAutoReply(
   }
 
   // 6. Fetch Template Content
-  const { data: template } = await supabase
+  const { data: template } = await supabase!
     .from('message_templates')
     .select('content')
     .eq('id', templateId)
@@ -159,7 +161,8 @@ export async function shouldTriggerAutoReply(
  * Updates lead conversation state after a reply is sent
  */
 export async function markLeadAsReplied(leadId: string) {
-  await supabase
+  if (!supabase) return;
+  await supabase!
     .from('leads')
     .update({ conversation_state: 'replied', updated_at: new Date().toISOString() })
     .eq('id', leadId);

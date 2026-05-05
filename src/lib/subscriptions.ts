@@ -11,6 +11,8 @@ export interface SubscriptionStatus {
  * Checks if a business has an active subscription
  */
 export async function checkSubscription(businessId: string): Promise<SubscriptionStatus> {
+  if (!supabase) return { isActive: false, plan: 'Free', expiryDate: null, status: 'inactive' };
+
   try {
     const { data, error } = await supabase
       .from('subscriptions')

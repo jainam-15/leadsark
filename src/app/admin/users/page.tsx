@@ -3,7 +3,7 @@
 import { useAdmin } from "@/hooks/useAdmin";
 import Link from "next/link";
 import { useState } from "react";
-import { getDaysRemaining, getSubscriptionStatusLabel } from "@/lib/subscription-utils";
+import { getDaysRemaining, getSubscriptionStatusLabel, isExpired } from "@/lib/subscription-utils";
 
 export default function AdminUsersPage() {
   const { businesses, loading, updateSubscription } = useAdmin();
@@ -20,7 +20,7 @@ export default function AdminUsersPage() {
     if (filter === "all") return matchesSearch;
     if (filter === "trial") return matchesSearch && b.subscription?.status === 'trial';
     if (filter === "active") return matchesSearch && b.subscription?.status === 'active';
-    if (filter === "expired") return matchesSearch && new Date(b.subscription?.end_date) < new Date();
+    if (filter === "expired") return matchesSearch && isExpired(b.subscription?.end_date);
     
     return matchesSearch;
   });

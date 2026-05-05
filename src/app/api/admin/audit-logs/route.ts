@@ -8,6 +8,10 @@ export async function GET() {
     return NextResponse.json({ error: adminCheck.error }, { status: adminCheck.status });
   }
 
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Admin client not initialized" }, { status: 500 });
+  }
+
   try {
     const { data, error } = await supabaseAdmin
       .from('audit_logs')

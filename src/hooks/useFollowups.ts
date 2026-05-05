@@ -7,8 +7,10 @@ export interface Followup {
   id: string;
   lead_id: string;
   scheduled_at: string;
-  status: 'pending' | 'sent' | 'skipped';
+  status: 'pending' | 'sent' | 'skipped' | 'completed';
   message_template_id: string;
+  sent_at?: string;
+  created_at?: string;
   lead?: any;
   isOverdue?: boolean;
 }
@@ -77,12 +79,12 @@ export function useFollowups() {
     }
   };
 
-  const updateFollowupStatus = async (id: string, status: 'sent' | 'skipped') => {
+  const updateFollowupStatus = async (id: string, status: 'pending' | 'sent' | 'skipped' | 'completed') => {
     if (!supabase) return;
     
     try {
       const updateData: any = { status };
-      if (status === 'sent') updateData.sent_at = new Date().toISOString();
+      if (status === 'sent' || status === 'completed') updateData.sent_at = new Date().toISOString();
 
       const { error } = await supabase
         .from('followups')
@@ -98,7 +100,7 @@ export function useFollowups() {
   };
 
   const toggleComplete = async (id: string, currentlyCompleted: boolean) => {
-    return await updateFollowupStatus(id, currentlyCompleted ? 'pending' : 'sent' as any);
+    return await updateFollowupStatus(id, currentlyCompleted ? 'pending' : 'completed');
   };
 
   return { followUps, loading, scheduleFollowup, updateFollowupStatus, toggleComplete, fetchFollowups };

@@ -12,7 +12,7 @@ export default function AdminSubscriptionsPage() {
   // Filter only those that have a business and subscription record
   const subscriptions = businesses
     .filter(b => b.subscription)
-    .sort((a, b) => new Date(b.subscription.updated_at || 0).getTime() - new Date(a.subscription.updated_at || 0).getTime());
+    .sort((a, b) => new Date(b.subscription!.updated_at || 0).getTime() - new Date(a.subscription!.updated_at || 0).getTime());
 
   return (
     <div className="p-8 space-y-8">
@@ -36,7 +36,7 @@ export default function AdminSubscriptionsPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {subscriptions.map((biz) => {
-              const sub = biz.subscription;
+              const sub = biz.subscription!;
               const status = getSubscriptionStatusLabel(sub);
               const days = getDaysRemaining(sub.end_date);
 

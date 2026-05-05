@@ -16,8 +16,8 @@ export default function Dashboard() {
     return d.toDateString() === new Date().toDateString();
   }).length;
   
-  const pending = followUps.filter(f => !f.completed && !f.isOverdue).length;
-  const overdue = followUps.filter(f => !f.completed && f.isOverdue);
+  const pending = followUps.filter(f => f.status !== 'completed' && !f.isOverdue).length;
+  const overdue = followUps.filter(f => f.status !== 'completed' && f.isOverdue);
   const missed = overdue.length;
   
   const converted = leads.filter(l => l.status === 'Converted').length;
