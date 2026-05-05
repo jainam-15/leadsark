@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSettings } from "@/hooks/useSettings";
 import { useAutomation, Template, FlowStep } from "@/hooks/useAutomation";
+import { WhatsAppSettings } from "@/components/WhatsAppSettings";
 
 type Tab = "profile" | "whatsapp" | "automation" | "team" | "billing";
 
@@ -159,24 +160,7 @@ export default function SettingsPage() {
 
           {/* WhatsApp Tab */}
           {activeTab === "whatsapp" && (
-            <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-6 border-b border-slate-100 pb-4">WhatsApp Connection</h2>
-              
-              <div className="p-6 bg-wa-green/5 border border-wa-green/20 rounded-2xl flex items-start md:items-center justify-between flex-col md:flex-row gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-wa-green text-white flex items-center justify-center shadow-lg shadow-wa-green/20">
-                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>chat</span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-lg">{localSettings.whatsappConnected ? "Connected" : "Not Connected"}</h3>
-                    <p className="text-sm text-slate-500">{localSettings.whatsappConnected ? "+1 (555) 123-4567 • API Active" : "Waiting for setup"}</p>
-                  </div>
-                </div>
-                <button className="px-5 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm shadow-sm hover:bg-slate-50 transition-all">
-                  {localSettings.whatsappConnected ? "Disconnect" : "Connect API"}
-                </button>
-              </div>
-            </div>
+            <WhatsAppSettings />
           )}
 
           {/* Automation Tab */}

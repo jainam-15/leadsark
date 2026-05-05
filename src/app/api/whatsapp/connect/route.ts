@@ -45,8 +45,8 @@ export async function POST(req: Request) {
       verify_token 
     } = await req.json();
 
-    if (!phone_number_id || !access_token || !verify_token) {
-      return NextResponse.json({ error: "phone_number_id, access_token, and verify_token are required" }, { status: 400 });
+    if (!phone_number_id || !verify_token) {
+      return NextResponse.json({ error: "phone_number_id and verify_token are required" }, { status: 400 });
     }
 
     // 4. Update/Insert Connection Info
@@ -64,14 +64,19 @@ export async function POST(req: Request) {
     if (connError) throw connError;
 
     // 5. Store Secrets Securely
+    const secretData: any = {
+      business_id: businessId,
+      verify_token,
+      updated_at: new Date().toISOString()
+    };
+
+    if (access_token) {
+      secretData.access_token = access_token;
+    }
+
     const { error: secretError } = await supabaseAdmin
       .from('whatsapp_secrets')
-      .upsert({
-        business_id: businessId,
-        access_token,
-        verify_token,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'business_id' });
+      .upsert(secretData, { onConflict: 'business_id' });
 
     if (secretError) throw secretError;
 
