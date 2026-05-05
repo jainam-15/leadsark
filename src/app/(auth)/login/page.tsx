@@ -1,20 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isSupabaseConfigured } = useAuth();
+  const { login, user, role, loading: authLoading, isSupabaseConfigured } = useAuth();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/dashboard');
+      }
+    }
+  }, [user, role, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,38 +45,34 @@ export default function LoginPage() {
 
     try {
       const res = await login(email, password);
-      const { data, error } = res;
 
-      if (error) throw error;
+      if (res.error) {
+        // Special handling for email confirmation
+        if (res.error.message === "Email not confirmed") {
+          router.replace("/verify-email");
+          return;
+        }
+        throw res.error;
+      }
       
-      setSuccess(true);
-      
-      // Check verification status
-      if (data?.user && !data.user.email_confirmed_at) {
-        router.replace("/verify-email");
-      } else {
-        const profile = (res as any).profile;
-        if (profile?.role === 'admin') {
+      if (res.success) {
+        setSuccess(true);
+        // Role-based redirection is handled here based on the result from the provider
+        if (res.role === 'admin') {
           router.replace("/admin");
         } else {
           router.replace("/dashboard");
         }
       }
     } catch (err: any) {
-      if (err.message === "Email not confirmed") {
-        router.replace("/verify-email");
-        return;
-      }
-      if (err.message !== "Invalid login credentials") {
-        console.error("Login error:", err);
-      }
+      console.error("[Login] Submit error:", err);
       setError(err.message || "Invalid login credentials.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDemoLogin = () => {
+  const handleDemoLogin = async () => {
     if (!isSupabaseConfigured) {
       router.push("/dashboard");
       return;
@@ -73,6 +80,8 @@ export default function LoginPage() {
     
     setEmail("demo@leadsark.com");
     setPassword("demo123");
+    
+    // We don't automatically submit to let the user see the credentials
   };
 
   return (
@@ -113,6 +122,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
               placeholder="you@company.com"
+              required
             />
           </div>
           <div>
@@ -124,6 +134,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm pr-12"
                 placeholder="••••••••"
+                required
               />
               <button
                 type="button"
@@ -142,7 +153,7 @@ export default function LoginPage() {
               <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" />
               <span>Remember me</span>
             </label>
-            <a href="#" className="text-sm font-semibold text-teal-600 hover:text-teal-700">Forgot password?</a>
+            <Link href="#" className="text-sm font-semibold text-teal-600 hover:text-teal-700">Forgot password?</Link>
           </div>
 
           <button

@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
 export function useSettings() {
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [profile, setProfile] = useState({
     name: "Alex Rivera",
     email: "alex@cloudscale.com",
@@ -29,11 +29,11 @@ export function useSettings() {
   useEffect(() => {
     if (!user) return;
     fetchSettings();
-  }, [user]);
+  }, [user, authProfile?.business_id]);
 
   const fetchSettings = async () => {
     setLoading(true);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
+    if (!isSupabaseConfigured || !supabase || !user || !authProfile?.business_id) {
       setLoading(false);
       return;
     }
@@ -65,7 +65,7 @@ export function useSettings() {
       const { data: settingsData } = await supabase
         .from('settings')
         .select('*')
-        .eq('business_id', user.businessId)
+        .eq('business_id', authProfile.business_id)
         .single();
 
       if (settingsData) {
@@ -103,11 +103,11 @@ export function useSettings() {
       if (profileError) throw profileError;
 
       // Update business name if changed
-      if (user.businessId) {
+      if (authProfile?.business_id) {
         const { error: businessError } = await supabase
           .from('businesses')
           .update({ name: newProfile.businessName })
-          .eq('id', user.businessId);
+          .eq('id', authProfile.business_id);
         if (businessError) throw businessError;
       }
       
@@ -120,7 +120,7 @@ export function useSettings() {
 
   const updateSettings = async (newSettings: any) => {
     setSettings(newSettings);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) return { success: true };
+    if (!isSupabaseConfigured || !supabase || !authProfile?.business_id) return { success: true };
 
     try {
       const { error } = await supabase
@@ -136,7 +136,7 @@ export function useSettings() {
           followup_template_id: newSettings.followupTemplateId || null,
           followup_mode: newSettings.followupMode
         })
-        .eq('business_id', user.businessId);
+        .eq('business_id', authProfile.business_id);
       
       if (error) throw error;
       return { success: true };

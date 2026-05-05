@@ -13,19 +13,19 @@ const mockLeads: LeadType[] = [
 ];
 
 export function useLeads() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [leads, setLeads] = useState<LeadType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     fetchLeads();
-  }, [user]);
+  }, [user, profile?.business_id]);
 
   const fetchLeads = async () => {
     setLoading(true);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
-      setLeads(mockLeads);
+    if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
+      if (!isSupabaseConfigured) setLeads(mockLeads);
       setLoading(false);
       return;
     }
@@ -34,6 +34,7 @@ export function useLeads() {
       const { data, error } = await supabase
         .from('leads')
         .select('*')
+        .eq('business_id', profile.business_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -106,16 +107,16 @@ export function useLeads() {
   };
 
   const addLead = async (name: string, company: string, phone: string, email: string) => {
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
+    if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
       const newLead: LeadType = { id: Date.now().toString(), name, company, status: 'Cold', snippet: 'New lead', time: 'Just now' };
-      setLeads([newLead, ...leads]);
+      if (!isSupabaseConfigured) setLeads([newLead, ...leads]);
       return { success: true, data: newLead };
     }
 
     try {
       const { data, error } = await supabase
         .from('leads')
-        .insert([{ business_id: user.businessId, name, company, phone, email, status: 'Cold' }])
+        .insert([{ business_id: profile.business_id, name, company, phone, email, status: 'Cold' }])
         .select()
         .single();
       

@@ -1,27 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
-import { ensureUserBusinessSetup } from "@/lib/auth-helpers";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isSupabaseConfigured } = useAuth();
+  const { register, user, role, loading: authLoading, isSupabaseConfigured } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     businessName: "",
     password: "",
   });
+  
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (role === 'admin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/dashboard');
+      }
+    }
+  }, [user, role, authLoading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -45,49 +55,30 @@ export default function RegisterPage() {
     setStatus("Creating your account...");
 
     try {
-      // 1. Sign up user
-      const { data: authData, error: authError } = await register(
+      const res = await register(
         formData.email,
         formData.password,
         { name: formData.name, business_name: formData.businessName }
       );
 
-      if (authError) throw authError;
+      if (res.error) throw res.error;
 
-      // If session exists (confirmation OFF), we can try to setup business now
-      if (authData?.session) {
-        setStatus("Setting up your workspace...");
-        const { ensureUserBusinessSetupAction } = await import('@/app/actions/auth');
-        const result = await ensureUserBusinessSetupAction(
-          authData.user!.id,
-          formData.email,
-          formData.businessName, // Use real input
-          formData.name
-        );
-        
-        if (result.success) {
-          setSuccess(true);
-          setStatus("Setup complete! Redirecting...");
-          router.replace("/dashboard");
-        } else {
-          setError(result.error || "Account created but business setup failed. Please try logging in.");
-          setLoading(false);
-        }
-      } else {
-        // Confirmation is ON
-        setSuccess(true);
-        setStatus("Check your email to verify your account.");
-        setLoading(false);
-      }
+      setSuccess(true);
+      setStatus("Account created! Redirecting to setup...");
+      
+      // Provider handles session creation and auto-setup if configured
+      // But we can show a nice message here.
+      
     } catch (err: any) {
+      console.error("[Register] Submit error:", err);
       if (err.message === "User already registered") {
         setError("An account with this email already exists. Please sign in instead.");
       } else if (err.message?.includes("rate limit")) {
         setError("Too many attempts. Please wait a few minutes before trying again.");
       } else {
-        console.error("Registration error:", err);
         setError(err.message || "An error occurred during registration.");
       }
+    } finally {
       setLoading(false);
     }
   };
@@ -100,7 +91,7 @@ export default function RegisterPage() {
             <span className="material-symbols-outlined text-3xl">mail</span>
           </div>
           <h2 className="text-2xl font-black text-slate-900 mb-2">Verify your email</h2>
-          <p className="text-slate-600 mb-8">{status}</p>
+          <p className="text-slate-600 mb-8">Check your email to verify your account and complete setup.</p>
           <div className="space-y-4">
             <Link href="/login" className="block w-full py-3 bg-slate-900 text-white rounded-xl shadow-lg font-black text-sm uppercase tracking-widest">
               Back to Login
@@ -143,6 +134,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
               placeholder="John Doe"
+              required
             />
           </div>
           <div>
@@ -154,6 +146,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
               placeholder="you@company.com"
+              required
             />
           </div>
           <div>
@@ -165,6 +158,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
               placeholder="Acme Corp"
+              required
             />
           </div>
           <div>
@@ -177,6 +171,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm pr-12"
                 placeholder="••••••••"
+                required
               />
               <button
                 type="button"

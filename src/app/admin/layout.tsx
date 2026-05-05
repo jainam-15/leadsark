@@ -6,17 +6,28 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout } = useAuth();
+  const { user, role, loading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
-      router.push('/dashboard');
+    if (!loading) {
+      if (!user) {
+        console.log("[AdminLayout] No user, redirecting to login");
+        router.replace('/login');
+      } else if (role !== 'admin') {
+        console.log("[AdminLayout] Not an admin, redirecting to dashboard");
+        router.replace('/dashboard');
+      }
     }
-  }, [user, loading]);
+  }, [user, role, loading, router]);
 
-  if (loading || !user || user.role !== 'admin') {
-    return <div className="h-screen w-screen flex items-center justify-center bg-slate-50 font-bold text-slate-400">Verifying Admin Access...</div>;
+  if (loading || !user || role !== 'admin') {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
+        <p className="font-bold text-slate-400 animate-pulse">Verifying Admin Access...</p>
+      </div>
+    );
   }
 
   return (

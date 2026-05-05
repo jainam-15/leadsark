@@ -19,7 +19,7 @@ const mockMessages: Message[] = [
 ];
 
 export function useMessages(leadId?: string) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -29,12 +29,13 @@ export function useMessages(leadId?: string) {
       return;
     }
     fetchMessages(leadId);
-  }, [leadId, user]);
+  }, [leadId, user, profile?.business_id]);
 
   const fetchMessages = async (id: string) => {
     setLoading(true);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
-      setMessages(mockMessages);
+    if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
+      // Show mock data only if not configured or not logged in
+      if (!isSupabaseConfigured) setMessages(mockMessages);
       setLoading(false);
       return;
     }
@@ -81,11 +82,11 @@ export function useMessages(leadId?: string) {
     // Optimistic update
     setMessages(prev => [...prev, newMsg]);
 
-    if (isSupabaseConfigured && supabase && user?.businessId) {
+    if (isSupabaseConfigured && supabase && profile?.business_id) {
       try {
         const { error } = await supabase
           .from('messages')
-          .insert([{ lead_id: leadId, business_id: user.businessId, text, is_sent: true }]);
+          .insert([{ lead_id: leadId, business_id: profile.business_id, text, is_sent: true }]);
         if (error) throw error;
       } catch (error) {
         console.error('Error sending message:', error);

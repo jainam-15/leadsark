@@ -25,12 +25,17 @@ export async function GET(request: Request) {
       })
 
       // Ensure business setup is done
-      await ensureUserBusinessSetup(
+      const setupResult = await ensureUserBusinessSetup(
         session.user.id, 
         session.user.email!,
         session.user.user_metadata?.business_name,
         session.user.user_metadata?.full_name
       )
+
+      if (!setupResult.success) {
+        console.error("[Auth Callback] Business setup failed:", setupResult.error);
+        // We still redirect to dashboard, but the user might see a setup prompt
+      }
       
       return response
     }

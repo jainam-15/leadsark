@@ -18,28 +18,28 @@ export interface FlowStep {
 }
 
 export function useAutomation() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [flows, setFlows] = useState<FlowStep[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.businessId) {
+    if (profile?.business_id) {
       fetchAutomationData();
     }
-  }, [user]);
+  }, [profile?.business_id]);
 
   const fetchAutomationData = async () => {
     setLoading(true);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
+    if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
       setLoading(false);
       return;
     }
 
     try {
       const [tRes, fRes] = await Promise.all([
-        supabase.from('message_templates').select('*').eq('business_id', user.businessId),
-        supabase.from('automation_flows').select('*').eq('business_id', user.businessId)
+        supabase.from('message_templates').select('*').eq('business_id', profile.business_id),
+        supabase.from('automation_flows').select('*').eq('business_id', profile.business_id)
       ]);
 
       if (tRes.data) setTemplates(tRes.data as any);
@@ -52,7 +52,7 @@ export function useAutomation() {
   };
 
   const saveTemplate = async (template: Partial<Template>) => {
-    if (!supabase || !user?.businessId) return { success: false };
+    if (!supabase || !profile?.business_id) return { success: false };
     
     try {
       if (template.id) {
@@ -64,7 +64,7 @@ export function useAutomation() {
       } else {
         const { error } = await supabase
           .from('message_templates')
-          .insert([{ ...template, business_id: user.businessId }]);
+          .insert([{ ...template, business_id: profile.business_id }]);
         if (error) throw error;
       }
       await fetchAutomationData();
@@ -81,7 +81,7 @@ export function useAutomation() {
   };
 
   const saveFlowStep = async (step: Partial<FlowStep>) => {
-    if (!supabase || !user?.businessId) return { success: false };
+    if (!supabase || !profile?.business_id) return { success: false };
     
     try {
       if (step.id) {
@@ -93,7 +93,7 @@ export function useAutomation() {
       } else {
         const { error } = await supabase
           .from('automation_flows')
-          .insert([{ ...step, business_id: user.businessId }]);
+          .insert([{ ...step, business_id: profile.business_id }]);
         if (error) throw error;
       }
       await fetchAutomationData();

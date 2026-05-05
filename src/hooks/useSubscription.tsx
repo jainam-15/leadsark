@@ -15,12 +15,12 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.businessId) {
+    if (!profile?.business_id) {
       setLoading(false);
       return;
     }
@@ -29,7 +29,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const { data, error } = await supabase!
         .from('subscriptions')
         .select('*')
-        .eq('business_id', user.businessId)
+        .eq('business_id', profile.business_id)
         .maybeSingle();
 
       if (!error && data) {
@@ -39,7 +39,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
 
     fetchSub();
-  }, [user?.businessId]);
+  }, [profile?.business_id]);
 
   const expired = isExpired(subscription?.end_date);
   const days = getDaysRemaining(subscription?.end_date);

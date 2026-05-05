@@ -16,20 +16,20 @@ export interface Followup {
 }
 
 export function useFollowups() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [followUps, setFollowUps] = useState<Followup[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.businessId) {
+    if (profile?.business_id) {
       fetchFollowups();
     }
-  }, [user]);
+  }, [profile?.business_id]);
 
   const fetchFollowups = async () => {
-    console.log("fetchFollowups triggered", { businessId: user?.businessId });
+    console.log("fetchFollowups triggered", { businessId: profile?.business_id });
     setLoading(true);
-    if (!isSupabaseConfigured || !supabase || !user?.businessId) {
+    if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
       console.warn("Followups fetch skipped: Pre-conditions not met");
       setLoading(false);
       return;
@@ -40,7 +40,7 @@ export function useFollowups() {
       const { data, error, status, statusText } = await supabase
         .from('followups')
         .select('*')
-        .eq('business_id', user.businessId);
+        .eq('business_id', profile.business_id);
 
       if (error) {
         console.error("Supabase error (stringified):", JSON.stringify(error, null, 2));
@@ -58,14 +58,14 @@ export function useFollowups() {
   };
 
   const scheduleFollowup = async (leadId: string, scheduledAt: Date, templateId?: string) => {
-    if (!supabase || !user?.businessId) return { success: false };
+    if (!supabase || !profile?.business_id) return { success: false };
 
     try {
       const { error } = await supabase
         .from('followups')
         .insert([{
           lead_id: leadId,
-          business_id: user.businessId,
+          business_id: profile.business_id,
           scheduled_at: scheduledAt.toISOString(),
           message_template_id: templateId,
           status: 'pending'

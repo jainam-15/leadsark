@@ -1,23 +1,29 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { User, Session } from '@supabase/supabase-js';
 
 interface AuthProfile {
   id: string;
   email: string;
-  emailConfirmed: boolean;
-  businessId?: string;
-  role?: string;
+  full_name?: string;
+  business_id?: string;
+  role: 'admin' | 'user';
+  email_confirmed: boolean;
 }
 
 interface AuthContextType {
-  user: AuthProfile | null;
+  session: Session | null;
+  user: User | null;
+  profile: AuthProfile | null;
+  role: 'admin' | 'user' | null;
   loading: boolean;
+  error: string | null;
   isSupabaseConfigured: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (email: string, password: string, metadata: any) => Promise<any>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: any; role?: string }>;
+  register: (email: string, password: string, metadata: any) => Promise<{ success: boolean; error?: any }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -25,9 +31,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [role, setRole] = useState<'admin' | 'user' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const router = useRouter();
+  const pathname = usePathname();
 
   const updateCookie = (token: string) => {
     document.cookie = `sb-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
@@ -37,14 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     document.cookie = 'sb-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   };
 
-  const loadUserProfile = async (supabaseUser: any) => {
+  const loadUserProfile = async (supabaseUser: User) => {
     if (!supabase) return null;
     
     try {
-      // 1. Fetch CURRENT USER profile only (Safe/Non-recursive)
+      console.log(`[Auth] Fetching profile for user: ${supabaseUser.id}`);
       const { data: profileData, error: profileError } = await supabase!
         .from('profiles')
-        .select('business_id, role')
+        .select('*')
         .eq('id', supabaseUser.id)
         .maybeSingle();
       
@@ -52,8 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       let data = profileData;
 
-      // 2. Auto-provision if missing
+      // Auto-provision if missing and email confirmed
       if (!data && supabaseUser.email_confirmed_at) {
+        console.log(`[Auth] Profile missing for verified user. Auto-provisioning...`);
         const { ensureUserBusinessSetupAction } = await import('@/app/actions/auth');
         const metadata = supabaseUser.user_metadata || {};
         const result = await ensureUserBusinessSetupAction(
@@ -66,159 +79,238 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (result.success) {
           const { data: refreshed } = await supabase!
             .from('profiles')
-            .select('business_id, role')
+            .select('*')
             .eq('id', supabaseUser.id)
             .single();
           data = refreshed;
+          console.log(`[Auth] Auto-provisioning successful`);
+        } else {
+          console.error(`[Auth] Auto-provisioning failed:`, result.error);
         }
       }
       
-      const profile = {
-        id: supabaseUser.id,
-        email: supabaseUser.email!,
-        emailConfirmed: !!supabaseUser.email_confirmed_at,
-        businessId: data?.business_id,
-        role: data?.role || 'user'
-      };
-      
-      setUser(profile);
-      return profile;
+      if (data) {
+        const authProfile: AuthProfile = {
+          id: data.id,
+          email: data.email,
+          full_name: data.full_name,
+          business_id: data.business_id,
+          role: data.role || 'user',
+          email_confirmed: !!supabaseUser.email_confirmed_at
+        };
+        
+        setProfile(authProfile);
+        setRole(authProfile.role);
+        console.log(`[Auth] Profile loaded. Role: ${authProfile.role}`);
+        return authProfile;
+      } else {
+        console.warn(`[Auth] No profile found for user`);
+        setProfile(null);
+        setRole(null);
+        return null;
+      }
     } catch (err) {
       console.error("[Auth] Profile load failed:", err);
-      const basic = {
-        id: supabaseUser.id,
-        email: supabaseUser.email!,
-        emailConfirmed: !!supabaseUser.email_confirmed_at
-      };
-      setUser(basic);
-      return basic;
+      setProfile(null);
+      setRole(null);
+      return null;
+    }
+  };
+
+  const handleAuthEvent = async (event: string, newSession: Session | null) => {
+    console.log(`[Auth] Event: ${event} | Session exists: ${!!newSession}`);
+    setSession(newSession);
+    setUser(newSession?.user || null);
+
+    if (newSession?.user) {
+      updateCookie(newSession.access_token);
+      await loadUserProfile(newSession.user);
+    } else {
+      clearCookie();
+      setProfile(null);
+      setRole(null);
+      if (event === 'SIGNED_OUT') {
+        router.replace('/login');
+        router.refresh();
+      }
     }
   };
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
+      console.warn("[Auth] Supabase not configured");
       setLoading(false);
       return;
     }
 
     const initAuth = async () => {
-      // Safety timeout to ensure loading always clears
-      const timeout = setTimeout(() => setLoading(false), 10000);
-      
       try {
-        const { data: { session }, error: sessionError } = await supabase!.auth.getSession();
+        setLoading(true);
+        setError(null);
+        
+        // 1. Get initial session
+        const { data: { session: initialSession }, error: sessionError } = await supabase!.auth.getSession();
+        
         if (sessionError) {
-          if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('invalid_refresh_token')) {
-            console.warn("Auth: Session expired or invalid refresh token. Clearing session.");
-            await supabase!.auth.signOut();
-            clearCookie();
-            setUser(null);
-          } else {
-            throw sessionError;
-          }
+          console.error("[Auth] Initial session error:", sessionError);
+          throw sessionError;
         }
 
-        if (session) {
-          updateCookie(session.access_token);
-          await loadUserProfile(session.user);
+        if (initialSession) {
+          // 2. Validate session with getUser (more secure)
+          const { data: { user: validatedUser }, error: userError } = await supabase!.auth.getUser();
+          
+          if (userError || !validatedUser) {
+            console.warn("[Auth] Session invalid or user not found. Clearing.");
+            await supabase!.auth.signOut();
+            await handleAuthEvent('SIGNED_OUT', null);
+          } else {
+            console.log("[Auth] Session validated");
+            await handleAuthEvent('INITIAL_SESSION', initialSession);
+          }
+        } else {
+          console.log("[Auth] No initial session");
+          setLoading(false);
         }
-      } catch (error: any) {
-        console.error("Auth init error:", error);
-        if (error?.message?.includes('Refresh Token Not Found')) {
-          clearCookie();
-          setUser(null);
-        }
+      } catch (err: any) {
+        console.error("[Auth] Initialization error:", err);
+        setError(err.message);
+        setLoading(false);
       } finally {
-        clearTimeout(timeout);
         setLoading(false);
       }
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, session) => {
-      try {
-        if (session) {
-          updateCookie(session.access_token);
-          await loadUserProfile(session.user);
-        } else {
-          clearCookie();
-          setUser(null);
-          if (event === 'SIGNED_OUT') router.replace('/login');
-        }
-      } catch (err: any) {
-        console.error("Auth state change error:", err);
-        if (err?.message?.includes('Refresh Token Not Found')) {
-          clearCookie();
-          setUser(null);
-          router.replace('/login');
-        }
+    // Listen for auth changes
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, currentSession) => {
+      // Avoid redundant loading if it's just a regular token refresh
+      if (event === 'TOKEN_REFRESHED') {
+        setSession(currentSession);
+        return;
       }
-      setLoading(false);
+      
+      await handleAuthEvent(event, currentSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    if (!supabase) return { error: 'Supabase not configured' };
-    const res = await supabase.auth.signInWithPassword({ email, password });
-    if (res.data.session) {
-      updateCookie(res.data.session.access_token);
-      const profile = await loadUserProfile(res.data.user);
-      return { ...res, profile };
+    if (!supabase) return { success: false, error: 'Supabase not configured' };
+    
+    try {
+      setLoading(true);
+      setError(null);
+      console.log(`[Auth] Attempting login for ${email}`);
+      
+      const { data, error: loginError } = await supabase!.auth.signInWithPassword({ email, password });
+      
+      if (loginError) throw loginError;
+
+      if (data.session) {
+        updateCookie(data.session.access_token);
+        const userProfile = await loadUserProfile(data.user!);
+        const userRole = userProfile?.role || 'user';
+        
+        console.log(`[Auth] Login success. Redirect target: ${userRole === 'admin' ? '/admin' : '/dashboard'}`);
+        
+        return { 
+          success: true, 
+          role: userRole 
+        };
+      }
+      
+      return { success: false, error: 'No session created' };
+    } catch (err: any) {
+      console.error("[Auth] Login error:", err);
+      setError(err.message);
+      return { success: false, error: err };
+    } finally {
+      setLoading(false);
     }
-    return res;
   };
 
   const register = async (email: string, password: string, metadata: any) => {
-    if (!supabase) return { error: 'Supabase not configured' };
-    const res = await supabase.auth.signUp({ 
-      email, password,
-      options: {
-        data: { full_name: metadata.name, business_name: metadata.business_name },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+    if (!supabase) return { success: false, error: 'Supabase not configured' };
+    
+    try {
+      setLoading(true);
+      setError(null);
+      console.log(`[Auth] Attempting register for ${email}`);
+      
+      const { data, error: regError } = await supabase!.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: { 
+            full_name: metadata.name, 
+            business_name: metadata.business_name 
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (regError) throw regError;
+
+      if (data.session) {
+        updateCookie(data.session.access_token);
+        await loadUserProfile(data.user!);
+        return { success: true };
       }
-    });
-    if (res.data.session) {
-      updateCookie(res.data.session.access_token);
-      const profile = await loadUserProfile(res.data.user);
-      return { ...res, profile };
+      
+      // If email confirmation is required, session might be null
+      console.log("[Auth] Registration successful, confirmation may be required");
+      return { success: true };
+    } catch (err: any) {
+      console.error("[Auth] Registration error:", err);
+      setError(err.message);
+      return { success: false, error: err };
+    } finally {
+      setLoading(false);
     }
-    return res;
   };
 
   const logout = async () => {
-    // 1. Immediately clear local state for instant UI feedback
-    clearCookie();
-    setUser(null);
-    router.replace('/login');
-
-    // 2. Perform network logout in the background
-    if (supabase) {
-      try {
-        await supabase.auth.signOut();
-      } catch (err) {
-        console.warn("Auth: signOut error (safe to ignore):", err);
+    console.log("[Auth] Logging out...");
+    try {
+      setLoading(true);
+      if (supabase) {
+        await supabase!.auth.signOut();
       }
+    } catch (err) {
+      console.warn("[Auth] signOut error (clearing local state anyway):", err);
+    } finally {
+      clearCookie();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setRole(null);
+      setLoading(false);
+      router.replace('/login');
+      router.refresh();
+      console.log("[Auth] Logout complete");
     }
   };
 
   return (
     <AuthContext.Provider value={{ 
+      session,
       user, 
+      profile,
+      role,
       loading, 
+      error,
       isSupabaseConfigured, 
       login, 
       register, 
       logout,
       refreshProfile: async () => {
-        try {
-          const { data: { user: sbUser } } = await supabase!.auth.getUser();
-          if (sbUser) await loadUserProfile(sbUser);
-        } catch (err) {
-          console.error("Auth: refreshProfile failed:", err);
-        }
+        if (!supabase || !user) return;
+        await loadUserProfile(user!);
       }
     }}>
       {children}
