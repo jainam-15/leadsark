@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 
@@ -39,7 +39,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   
   const router = useRouter();
-  const pathname = usePathname();
+
+  // Debug Logs
+  useEffect(() => {
+    console.log("---------------- AUTH DEBUG ----------------");
+    console.log("USER:", user?.id || 'null');
+    console.log("PROFILE:", profile ? 'loaded' : 'null');
+    console.log("ROLE:", role || 'null');
+    console.log("LOADING:", loading);
+    console.log("--------------------------------------------");
+  }, [user, profile, role, loading]);
 
   const updateCookie = (token: string) => {
     document.cookie = `sb-auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
@@ -49,46 +58,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     document.cookie = 'sb-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   };
 
-  const loadUserProfile = async (supabaseUser: User) => {
-    if (!supabase) return null;
+  const fetchProfile = async (u: User) => {
+    if (!supabase) return;
     
     try {
-      console.log(`[Auth] Fetching profile for user: ${supabaseUser.id}`);
-      const { data: profileData, error: profileError } = await supabase!
+      console.log(`[Auth] Fetching profile for: ${u.id}`);
+      const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', supabaseUser.id)
+        .eq('id', u.id)
         .maybeSingle();
       
-      if (profileError) throw profileError;
-
-      let data = profileData;
-
-      // Auto-provision if missing and email confirmed
-      if (!data && supabaseUser.email_confirmed_at) {
-        console.log(`[Auth] Profile missing for verified user. Auto-provisioning...`);
-        const { ensureUserBusinessSetupAction } = await import('@/app/actions/auth');
-        const metadata = supabaseUser.user_metadata || {};
-        const result = await ensureUserBusinessSetupAction(
-          supabaseUser.id,
-          supabaseUser.email!,
-          metadata.business_name || `${metadata.full_name || 'My'}'s Business`,
-          metadata.full_name
-        );
-        
-        if (result.success) {
-          const { data: refreshed } = await supabase!
-            .from('profiles')
-            .select('*')
-            .eq('id', supabaseUser.id)
-            .single();
-          data = refreshed;
-          console.log(`[Auth] Auto-provisioning successful`);
-        } else {
-          console.error(`[Auth] Auto-provisioning failed:`, result.error);
-        }
+      if (profileError) {
+        console.error("[Auth] Profile fetch error:", profileError);
+        throw profileError;
       }
-      
+
       if (data) {
         const authProfile: AuthProfile = {
           id: data.id,
@@ -96,234 +81,122 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           full_name: data.full_name,
           business_id: data.business_id,
           role: data.role || 'user',
-          email_confirmed: !!supabaseUser.email_confirmed_at
+          email_confirmed: !!u.email_confirmed_at
         };
-        
         setProfile(authProfile);
         setRole(authProfile.role);
-        console.log(`[Auth] Profile loaded. Role: ${authProfile.role}`);
-        return authProfile;
       } else {
-        console.warn(`[Auth] No profile found for user`);
+        console.warn("[Auth] No profile found for user row.");
         setProfile(null);
         setRole(null);
-        return null;
       }
-    } catch (err) {
-      console.error("[Auth] Profile load failed:", err);
-      setProfile(null);
-      setRole(null);
-      return null;
-    }
-  };
-
-  const handleAuthEvent = async (event: string, newSession: Session | null) => {
-    console.log(`[Auth] Event: ${event} | Session exists: ${!!newSession}`);
-    setSession(newSession);
-    setUser(newSession?.user || null);
-
-    if (newSession?.user) {
-      updateCookie(newSession.access_token);
-      await loadUserProfile(newSession.user);
-    } else {
-      clearCookie();
-      setProfile(null);
-      setRole(null);
-      if (event === 'SIGNED_OUT') {
-        router.replace('/login');
-        router.refresh();
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
-      console.warn("[Auth] Supabase not configured");
+    } catch (err: any) {
+      console.error("[Auth] Profile fetch exception:", err);
+      setError(err.message);
+    } finally {
       setLoading(false);
-      return;
     }
+  };
 
+  // 1. Initial Session Load
+  useEffect(() => {
     const initAuth = async () => {
-      // Safety timeout: ensure loading state is cleared even if Supabase hangs
-      const timeoutId = setTimeout(() => {
-        if (loading) {
-          console.warn("[Auth] Initialization timeout. Forcing loading state to false.");
-          setLoading(false);
-        }
-      }, 5000);
-
       try {
         setLoading(true);
-        setError(null);
-        
-        console.log("[Auth] Starting initialization...");
-        // 1. Get initial session
-        const { data: { session: initialSession }, error: sessionError } = await supabase!.auth.getSession();
-        
-        if (sessionError) {
-          console.error("[Auth] Initial session error:", sessionError);
-          throw sessionError;
+        if (!isSupabaseConfigured || !supabase) {
+          setLoading(false);
+          return;
         }
 
-        if (initialSession) {
-          console.log("[Auth] Session found, validating...");
-          // 2. Validate session with getUser (more secure)
-          const { data: { user: validatedUser }, error: userError } = await supabase!.auth.getUser();
-          
-          if (userError || !validatedUser) {
-            console.warn("[Auth] Session invalid or user not found. Clearing state.");
-            await supabase!.auth.signOut();
-            await handleAuthEvent('SIGNED_OUT', null);
-          } else {
-            console.log("[Auth] Session validated successfully for:", validatedUser.email);
-            await handleAuthEvent('INITIAL_SESSION', initialSession);
-          }
-        } else {
-          console.log("[Auth] No initial session found.");
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user || null);
+
+        if (!initialSession) {
           setLoading(false);
         }
-      } catch (err: any) {
-        console.error("[Auth] Initialization critical error:", err);
-        setError(err.message);
+      } catch (err) {
+        console.error("[Auth] Init error:", err);
         setLoading(false);
-      } finally {
-        clearTimeout(timeoutId);
-        setLoading(false);
-        console.log("[Auth] Initialization sequence complete.");
       }
     };
 
     initAuth();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, currentSession) => {
-      // Avoid redundant loading if it's just a regular token refresh
-      if (event === 'TOKEN_REFRESHED') {
-        setSession(currentSession);
-        return;
-      }
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange((event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user || null);
       
-      await handleAuthEvent(event, currentSession);
+      if (currentSession?.access_token) {
+        updateCookie(currentSession.access_token);
+      } else {
+        clearCookie();
+        if (event === 'SIGNED_OUT') {
+          setProfile(null);
+          setRole(null);
+          router.replace('/login');
+        }
+      }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
+  // 2. Profile Fetch Trigger
+  useEffect(() => {
+    if (user) {
+      fetchProfile(user);
+    }
+  }, [user?.id]);
+
   const login = async (email: string, password: string) => {
-    if (!supabase) return { success: false, error: 'Supabase not configured' };
-    
     try {
       setLoading(true);
-      setError(null);
-      console.log(`[Auth] Attempting login for ${email}`);
-      
       const { data, error: loginError } = await supabase!.auth.signInWithPassword({ email, password });
-      
       if (loginError) throw loginError;
-
-      if (data.session) {
-        updateCookie(data.session.access_token);
-        const userProfile = await loadUserProfile(data.user!);
-        const userRole = userProfile?.role || 'user';
-        
-        console.log(`[Auth] Login success. Redirect target: ${userRole === 'admin' ? '/admin' : '/dashboard'}`);
-        
-        return { 
-          success: true, 
-          role: userRole 
-        };
-      }
-      
-      return { success: false, error: 'No session created' };
+      return { success: true, role: 'user' }; // Role will be loaded by effect
     } catch (err: any) {
-      console.error("[Auth] Login error:", err);
       setError(err.message);
-      return { success: false, error: err };
-    } finally {
       setLoading(false);
+      return { success: false, error: err };
     }
   };
 
   const register = async (email: string, password: string, metadata: any) => {
-    if (!supabase) return { success: false, error: 'Supabase not configured' };
-    
     try {
       setLoading(true);
-      setError(null);
-      console.log(`[Auth] Attempting register for ${email}`);
-      
       const { data, error: regError } = await supabase!.auth.signUp({ 
         email, 
         password,
         options: {
-          data: { 
-            full_name: metadata.name, 
-            business_name: metadata.business_name 
-          },
+          data: { full_name: metadata.name, business_name: metadata.business_name },
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
-      
       if (regError) throw regError;
-
-      if (data.session) {
-        updateCookie(data.session.access_token);
-        await loadUserProfile(data.user!);
-        return { success: true };
-      }
-      
-      // If email confirmation is required, session might be null
-      console.log("[Auth] Registration successful, confirmation may be required");
       return { success: true };
     } catch (err: any) {
-      console.error("[Auth] Registration error:", err);
       setError(err.message);
-      return { success: false, error: err };
-    } finally {
       setLoading(false);
+      return { success: false, error: err };
     }
   };
 
   const logout = async () => {
-    console.log("[Auth] Logging out...");
-    try {
-      setLoading(true);
-      if (supabase) {
-        await supabase!.auth.signOut();
-      }
-    } catch (err) {
-      console.warn("[Auth] signOut error (clearing local state anyway):", err);
-    } finally {
-      clearCookie();
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      setRole(null);
-      setLoading(false);
-      router.replace('/login');
-      router.refresh();
-      console.log("[Auth] Logout complete");
-    }
+    await supabase!.auth.signOut();
+    clearCookie();
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setRole(null);
+    router.replace('/login');
   };
 
   return (
     <AuthContext.Provider value={{ 
-      session,
-      user, 
-      profile,
-      role,
-      loading, 
-      error,
-      isSupabaseConfigured, 
-      login, 
-      register, 
-      logout,
-      refreshProfile: async () => {
-        if (!supabase || !user) return;
-        await loadUserProfile(user!);
-      }
+      session, user, profile, role, loading, error, isSupabaseConfigured, 
+      login, register, logout,
+      refreshProfile: async () => { if (user) await fetchProfile(user); }
     }}>
       {children}
     </AuthContext.Provider>

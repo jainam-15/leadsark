@@ -6,30 +6,57 @@ import { useEffect } from "react";
 import Link from "next/link";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, role, loading, logout } = useAuth();
+  const { user, profile, role, loading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        console.log("[AdminLayout] No user, redirecting to login");
         router.replace('/login');
-      } else if (role !== 'admin') {
-        console.log("[AdminLayout] Not an admin, redirecting to dashboard");
+      } else if (profile && role !== 'admin') {
         router.replace('/dashboard');
       }
     }
-  }, [user, role, loading, router]);
+  }, [user, profile, role, loading, router]);
 
-  if (loading || !user || role !== 'admin') {
+  // 1. Loading State
+  if (loading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-        <p className="font-bold text-slate-400 animate-pulse">Verifying Admin Access...</p>
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+        <p className="font-bold text-slate-400">Verifying Admin Access...</p>
       </div>
     );
   }
 
+  // 2. No User (Redirecting...)
+  if (!user) return null;
+
+  // 3. No Profile found after loading (Error state, not infinite spinner)
+  if (!profile) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-6">
+          <span className="material-symbols-outlined text-3xl">account_circle_off</span>
+        </div>
+        <h1 className="text-xl font-black text-slate-900 mb-2">Profile Not Found</h1>
+        <p className="text-slate-500 max-w-sm mb-8">
+          We couldn't find your administrative profile. Please contact the system administrator if you believe this is an error.
+        </p>
+        <button 
+          onClick={logout}
+          className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all"
+        >
+          Logout & Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // 4. Wrong Role (Redirecting...)
+  if (role !== 'admin') return null;
+
+  // 5. Authorized Admin UI
   return (
     <div className="flex h-screen bg-[#F8FAFC]">
       {/* Admin Sidebar */}
