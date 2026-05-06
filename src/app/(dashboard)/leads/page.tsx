@@ -15,6 +15,9 @@ export interface LeadType {
   status: LeadStatus;
   snippet: string;
   time: string;
+  phone?: string;
+  source?: string;
+  last_message_at?: string;
   unreadCount?: number;
   active?: boolean;
   overdue?: boolean;
@@ -30,11 +33,19 @@ export default function Leads() {
   const { leads, loading, updateLeadStatus } = useLeads();
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
 
   const filteredLeads = leads.filter(
-    lead => 
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      lead.company.toLowerCase().includes(searchQuery.toLowerCase())
+    lead => {
+      const matchesSearch = 
+        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        lead.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (lead.phone || '').includes(searchQuery);
+      
+      const matchesStatus = statusFilter === "All" || lead.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    }
   );
 
   // Default to first lead if none selected
@@ -61,15 +72,27 @@ export default function Leads() {
               <span className="material-symbols-outlined">filter_list</span>
             </button>
           </div>
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-            <input 
-              type="text" 
-              placeholder="Search leads..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-100 border-none rounded-lg pl-8 pr-3 py-1.5 text-sm focus:ring-2 focus:ring-wa-green/20 outline-none"
-            />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+              <input 
+                type="text" 
+                placeholder="Search leads..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-100 border-none rounded-lg pl-8 pr-3 py-1.5 text-sm focus:ring-2 focus:ring-wa-green/20 outline-none"
+              />
+            </div>
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-slate-100 border-none rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-wa-green/20"
+            >
+              <option value="All">All Status</option>
+              <option value="Hot">Hot</option>
+              <option value="Warm">Warm</option>
+              <option value="Cold">Cold</option>
+            </select>
           </div>
         </div>
         
@@ -91,7 +114,7 @@ export default function Leads() {
 
       {/* Column 2: Chat Interface (45%) */}
       {selectedLead ? (
-        <ChatUI leadName={selectedLead.name} />
+        <ChatUI leadName={selectedLead.name} leadId={selectedLead.id} />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 text-slate-400 gap-4">
           <span className="material-symbols-outlined text-6xl">chat_bubble</span>

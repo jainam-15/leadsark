@@ -6,6 +6,7 @@ import { useAuth } from './useAuth';
 
 export interface Message {
   id: string;
+  whatsapp_message_id?: string;
   text: string;
   time: string;
   isSent: boolean;
@@ -22,20 +23,50 @@ export function useMessages(leadId?: string) {
   const { user, profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (!leadId) {
+    if (!leadId || !profile?.business_id) {
       setMessages([]);
       return;
     }
     fetchMessages(leadId);
+
+    // Subscribe to new messages for this lead
+    const channel = supabase
+      ?.channel(`messages-lead-${leadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `lead_id=eq.${leadId}`
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          setMessages(prev => {
+            if (prev.find(m => m.id === newMsg.id || m.whatsapp_message_id === newMsg.whatsapp_message_id)) return prev;
+            return [...prev, {
+              id: newMsg.id,
+              whatsapp_message_id: newMsg.whatsapp_message_id,
+              text: newMsg.content,
+              time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              isSent: newMsg.direction === 'outgoing'
+            }];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (channel) supabase?.removeChannel(channel);
+    };
   }, [leadId, user, profile?.business_id]);
 
   const fetchMessages = async (id: string) => {
     setLoading(true);
     if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
-      // Show mock data only if not configured or not logged in
-      if (!isSupabaseConfigured) setMessages(mockMessages);
       setLoading(false);
       return;
     }
@@ -49,51 +80,52 @@ export function useMessages(leadId?: string) {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
+      if (data) {
         const formatted = data.map(dbMsg => ({
           id: dbMsg.id,
-          text: dbMsg.text,
+          whatsapp_message_id: dbMsg.whatsapp_message_id,
+          text: dbMsg.content,
           time: new Date(dbMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          isSent: dbMsg.is_sent,
-          // Simple dateStr grouping logic could be added here
+          isSent: dbMsg.direction === 'outgoing',
+          dateStr: new Date(dbMsg.created_at).toLocaleDateString()
         }));
         setMessages(formatted);
-      } else {
-        setMessages([]); // No messages for this lead
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      setMessages(mockMessages);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
   };
 
   const sendMessage = async (text: string) => {
-    if (!leadId) return;
+    if (!leadId || !text.trim()) return;
 
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      text,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isSent: true
-    };
+    setSending(true);
+    try {
+      const response = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, message: text })
+      });
 
-    // Optimistic update
-    setMessages(prev => [...prev, newMsg]);
+      const result = await response.json();
 
-    if (isSupabaseConfigured && supabase && profile?.business_id) {
-      try {
-        const { error } = await supabase
-          .from('messages')
-          .insert([{ lead_id: leadId, business_id: profile.business_id, text, is_sent: true }]);
-        if (error) throw error;
-      } catch (error) {
-        console.error('Error sending message:', error);
-        // Could revert or show error state here
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send message");
       }
+
+      // The new message will come via real-time subscription, 
+      // but we can also add it manually for immediate feedback if needed.
+      // fetchMessages(leadId); 
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      alert(error.message);
+    } finally {
+      setSending(false);
     }
   };
 
-  return { messages, loading, sendMessage };
+  return { messages, loading, sending, sendMessage, fetchMessages };
 }

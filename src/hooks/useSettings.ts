@@ -7,27 +7,23 @@ import { useAuth } from './useAuth';
 export function useSettings() {
   const { user, profile: authProfile } = useAuth();
   const [profile, setProfile] = useState({
-    name: "Alex Rivera",
-    email: "alex@cloudscale.com",
-    businessName: "CloudScale Systems",
-    phone: "+1 (555) 123-4567"
+    name: "",
+    email: "",
+    businessName: "",
+    phone: ""
   });
   const [settings, setSettings] = useState({
     autoReply: true,
     autoReplyMode: "new_leads_only",
-    autoFollowUp: true,
-    followUpTiming: "24",
-    whatsappConnected: false,
+    greetingMessage: "Hello! Thanks for reaching out to us. How can we help you today?",
     workingHoursStart: "09:00",
     workingHoursEnd: "18:00",
-    greetingTemplateId: "",
-    followupTemplateId: "",
     followupMode: "suggest_with_approval"
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !authProfile?.business_id) return;
     fetchSettings();
   }, [user, authProfile?.business_id]);
 
@@ -42,13 +38,7 @@ export function useSettings() {
       // Fetch profile and business
       const { data: profileData } = await supabase
         .from('profiles')
-        .select(`
-          full_name,
-          email,
-          businesses (
-            name
-          )
-        `)
+        .select('full_name, email, phone, businesses(name)')
         .eq('id', user.id)
         .single();
 
@@ -57,28 +47,24 @@ export function useSettings() {
           name: profileData.full_name || '',
           email: profileData.email || '',
           businessName: (profileData.businesses as any)?.name || '',
-          phone: '' // Add phone to schema if needed
+          phone: profileData.phone || ''
         });
       }
 
       // Fetch settings
-      const { data: settingsData } = await supabase
+      const { data: settingsData, error: settingsError } = await supabase
         .from('settings')
         .select('*')
         .eq('business_id', authProfile.business_id)
-        .single();
+        .maybeSingle();
 
       if (settingsData) {
         setSettings({
-          autoReply: settingsData.auto_reply,
+          autoReply: settingsData.auto_reply_enabled,
           autoReplyMode: settingsData.auto_reply_mode || 'new_leads_only',
-          autoFollowUp: settingsData.auto_follow_up,
-          followUpTiming: settingsData.follow_up_timing,
-          whatsappConnected: settingsData.whatsapp_connected,
+          greetingMessage: settingsData.greeting_message || '',
           workingHoursStart: settingsData.working_hours_start || '09:00',
           workingHoursEnd: settingsData.working_hours_end || '18:00',
-          greetingTemplateId: settingsData.greeting_template_id || '',
-          followupTemplateId: settingsData.followup_template_id || '',
           followupMode: settingsData.followup_mode || 'suggest_with_approval'
         });
       }
@@ -94,15 +80,16 @@ export function useSettings() {
     if (!isSupabaseConfigured || !supabase || !user) return { success: true };
 
     try {
-      // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ full_name: newProfile.name })
+        .update({ 
+          full_name: newProfile.name,
+          phone: newProfile.phone
+        })
         .eq('id', user.id);
       
       if (profileError) throw profileError;
 
-      // Update business name if changed
       if (authProfile?.business_id) {
         const { error: businessError } = await supabase
           .from('businesses')
@@ -125,18 +112,16 @@ export function useSettings() {
     try {
       const { error } = await supabase
         .from('settings')
-        .update({
-          auto_reply: newSettings.autoReply,
+        .upsert({
+          business_id: authProfile.business_id,
+          auto_reply_enabled: newSettings.autoReply,
           auto_reply_mode: newSettings.autoReplyMode,
-          auto_follow_up: newSettings.autoFollowUp,
-          follow_up_timing: newSettings.followUpTiming,
+          greeting_message: newSettings.greetingMessage,
           working_hours_start: newSettings.workingHoursStart,
           working_hours_end: newSettings.workingHoursEnd,
-          greeting_template_id: newSettings.greetingTemplateId || null,
-          followup_template_id: newSettings.followupTemplateId || null,
-          followup_mode: newSettings.followupMode
-        })
-        .eq('business_id', authProfile.business_id);
+          followup_mode: newSettings.followupMode,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'business_id' });
       
       if (error) throw error;
       return { success: true };

@@ -18,48 +18,69 @@ export function useLeads() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profile?.business_id) return;
     fetchLeads();
   }, [user, profile?.business_id]);
 
   const fetchLeads = async () => {
     setLoading(true);
     if (!isSupabaseConfigured || !supabase || !profile?.business_id) {
-      if (!isSupabaseConfigured) setLeads(mockLeads);
       setLoading(false);
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      // Fetch leads for the current business
+      const { data: leadsData, error: leadsError } = await supabase
         .from('leads')
         .select('*')
         .eq('business_id', profile.business_id)
-        .order('created_at', { ascending: false });
+        .order('last_message_at', { ascending: false });
 
-      if (error) throw error;
+      if (leadsError) throw leadsError;
 
-      if (data) {
-        // Map DB structure to UI structure
-        const formatted = data.map(dbLead => ({
-          id: dbLead.id,
-          name: dbLead.name,
-          company: dbLead.company || 'Unknown',
-          status: dbLead.status as LeadStatus,
-          snippet: 'No recent messages',
-          time: new Date(dbLead.created_at).toLocaleDateString(),
-          is_blocked: dbLead.is_blocked,
-          is_personal: dbLead.is_personal,
-          automation_paused: dbLead.automation_paused,
-          conversation_state: dbLead.conversation_state,
-          lead_score: dbLead.lead_score || 0,
-          is_manual_status: dbLead.is_manual_status || false,
-        }));
+      if (leadsData) {
+        // Fetch latest message for each lead to show as snippet
+        const { data: messagesData } = await supabase
+          .from('messages')
+          .select('lead_id, content, created_at')
+          .in('lead_id', leadsData.map(l => l.id))
+          .order('created_at', { ascending: false });
+
+        // Map messages to leads
+        const latestMessages: Record<string, any> = {};
+        messagesData?.forEach(msg => {
+          if (!latestMessages[msg.lead_id]) {
+            latestMessages[msg.lead_id] = msg;
+          }
+        });
+
+        const formatted = leadsData.map(dbLead => {
+          const latestMsg = latestMessages[dbLead.id];
+          return {
+            id: dbLead.id,
+            name: dbLead.name,
+            company: dbLead.company || 'Unknown',
+            status: dbLead.status as LeadStatus,
+            snippet: latestMsg?.content || 'No recent messages',
+            time: dbLead.last_message_at 
+              ? new Date(dbLead.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : new Date(dbLead.created_at).toLocaleDateString(),
+            phone: dbLead.phone || dbLead.whatsapp_phone,
+            source: dbLead.source,
+            last_message_at: dbLead.last_message_at,
+            is_blocked: dbLead.is_blocked,
+            is_personal: dbLead.is_personal,
+            automation_paused: dbLead.automation_paused,
+            conversation_state: dbLead.conversation_state,
+            lead_score: dbLead.lead_score || 0,
+          };
+        });
         setLeads(formatted);
       }
     } catch (error) {
       console.error('Error fetching leads:', error);
-      setLeads(mockLeads);
+      setLeads([]);
     } finally {
       setLoading(false);
     }

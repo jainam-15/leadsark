@@ -4,14 +4,15 @@ import React, { useState } from 'react';
 import { useMessages } from '@/hooks/useMessages';
 
 export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadName?: string; leadId?: string }) {
-  const { messages, loading, sendMessage } = useMessages(leadId || 'mock-1');
+  const { messages, loading, sending, sendMessage } = useMessages(leadId);
   const [inputText, setInputText] = useState("");
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
-    sendMessage(inputText);
-    setInputText("");
+    if (!inputText.trim() || sending) return;
+    const textToSend = inputText.trim();
+    setInputText(""); // Clear immediately for better UX
+    await sendMessage(textToSend);
   };
 
   return (
@@ -47,9 +48,15 @@ export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadNam
       
       {/* Chat Messages */}
       <div className="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-4 z-10">
+        {messages.length === 0 && !loading && (
+          <div className="flex justify-center items-center h-full text-slate-500 font-medium bg-white/30 backdrop-blur-sm rounded-2xl mx-4">
+            No messages yet. Start the conversation!
+          </div>
+        )}
+        
         {messages.map((msg, idx) => (
           <React.Fragment key={msg.id}>
-            {msg.dateStr && (
+            {msg.dateStr && (idx === 0 || messages[idx-1].dateStr !== msg.dateStr) && (
               <div className="flex justify-center my-4">
                 <span className="bg-[#D1E4EF]/80 px-4 py-1 rounded-lg text-[11px] font-bold text-slate-600 uppercase tracking-widest shadow-sm">
                   {msg.dateStr}
@@ -73,24 +80,17 @@ export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadNam
           </React.Fragment>
         ))}
 
-        {/* Typing Indicator */}
-        <div className="flex items-center gap-3">
-          <div className="flex gap-1 p-2.5 bg-white rounded-2xl shadow-sm">
-            <div className="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce"></div>
-            <div className="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-1.5 h-1.5 bg-wa-green/60 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+        {loading && (
+          <div className="flex justify-center">
+            <div className="animate-pulse text-slate-500 text-xs">Loading messages...</div>
           </div>
-          <span className="text-[11px] text-slate-500 font-bold italic">Sarah is typing...</span>
-        </div>
+        )}
       </div>
       
       {/* Chat Input */}
       <form onSubmit={handleSend} className="p-4 bg-[#F0F2F5] z-10 flex items-center gap-2">
         <button type="button" className="p-2 text-slate-500 hover:text-wa-green transition-colors">
           <span className="material-symbols-outlined">mood</span>
-        </button>
-        <button type="button" className="p-2 text-slate-500 hover:text-wa-green transition-colors">
-          <span className="material-symbols-outlined">attach_file</span>
         </button>
         <div className="flex-1">
           <input 
@@ -99,11 +99,15 @@ export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadNam
             className="w-full bg-white border-none rounded-xl focus:ring-0 text-sm px-4 py-3 text-slate-800 placeholder:text-slate-400 shadow-sm outline-none" 
             placeholder="Type a message..." 
             type="text"
-            disabled={loading}
+            disabled={sending}
           />
         </div>
-        <button type="submit" disabled={!inputText.trim() || loading} className="bg-wa-green text-white p-3.5 rounded-full shadow-lg hover:bg-[#1ebe57] disabled:opacity-50 transition-all flex items-center justify-center">
-          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+        <button type="submit" disabled={!inputText.trim() || sending} className="bg-wa-green text-white p-3.5 rounded-full shadow-lg hover:bg-[#1ebe57] disabled:opacity-50 transition-all flex items-center justify-center min-w-[50px]">
+          {sending ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          ) : (
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+          )}
         </button>
       </form>
     </section>

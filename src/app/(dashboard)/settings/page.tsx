@@ -35,37 +35,17 @@ export default function SettingsPage() {
     else alert("Error saving profile: " + res.error);
   };
 
+  const handleSettingChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    const updated = { ...localSettings, [name]: val };
+    setLocalSettings(updated);
+    updateSettings(updated);
+  };
+
   const toggleAutoReply = () => {
     const newVal = !localSettings.autoReply;
     const updated = { ...localSettings, autoReply: newVal };
-    setLocalSettings(updated);
-    updateSettings(updated);
-  };
-
-  const toggleAutoFollowUp = () => {
-    const newVal = !localSettings.autoFollowUp;
-    const updated = { ...localSettings, autoFollowUp: newVal };
-    setLocalSettings(updated);
-    updateSettings(updated);
-  };
-
-  const handleTimingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newVal = e.target.value;
-    const updated = { ...localSettings, followUpTiming: newVal };
-    setLocalSettings(updated);
-    updateSettings(updated);
-  };
-
-  const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newVal = e.target.value;
-    const updated = { ...localSettings, autoReplyMode: newVal };
-    setLocalSettings(updated);
-    updateSettings(updated);
-  };
-
-  const handleTemplateSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    const updated = { ...localSettings, [name]: value };
     setLocalSettings(updated);
     updateSettings(updated);
   };
@@ -185,25 +165,23 @@ export default function SettingsPage() {
                     {localSettings.autoReply && (
                       <div className="space-y-6 pt-4 border-t border-slate-50">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-2">Greeting Template</label>
-                            <select 
-                              name="greetingTemplateId"
-                              value={localSettings.greetingTemplateId} 
-                              onChange={handleTemplateSelectChange}
-                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
-                            >
-                              <option value="">Select a template...</option>
-                              {templates.filter(t => t.type === 'greeting').map(t => (
-                                <option key={t.id} value={t.id}>{t.name}</option>
-                              ))}
-                            </select>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Greeting Message</label>
+                            <textarea 
+                              name="greetingMessage"
+                              value={localSettings.greetingMessage} 
+                              onChange={handleSettingChange}
+                              placeholder="Enter your auto-reply greeting message..."
+                              className="w-full h-24 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm resize-none focus:ring-2 focus:ring-wa-green/20"
+                            />
+                            <p className="text-[10px] text-slate-400 mt-2">This message will be sent automatically to new leads.</p>
                           </div>
                           <div>
                             <label className="block text-sm font-bold text-slate-700 mb-2">Auto-Reply Mode</label>
                             <select 
+                              name="autoReplyMode"
                               value={localSettings.autoReplyMode} 
-                              onChange={handleModeChange}
+                              onChange={handleSettingChange}
                               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
                             >
                               <option value="new_leads_only">New Leads Only</option>
@@ -218,7 +196,7 @@ export default function SettingsPage() {
                             <select 
                               name="followupMode"
                               value={localSettings.followupMode} 
-                              onChange={handleTemplateSelectChange}
+                              onChange={handleSettingChange}
                               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
                             >
                               <option value="manual">Manual (No suggestions)</option>
@@ -229,11 +207,11 @@ export default function SettingsPage() {
                           <div className="grid grid-cols-2 gap-4">
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Start</label>
-                              <input type="time" name="workingHoursStart" value={localSettings.workingHoursStart} onChange={handleWorkingHoursChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm" />
+                              <input type="time" name="workingHoursStart" value={localSettings.workingHoursStart} onChange={handleSettingChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm" />
                             </div>
                             <div>
                               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">End</label>
-                              <input type="time" name="workingHoursEnd" value={localSettings.workingHoursEnd} onChange={handleWorkingHoursChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm" />
+                              <input type="time" name="workingHoursEnd" value={localSettings.workingHoursEnd} onChange={handleSettingChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm" />
                             </div>
                           </div>
                         </div>

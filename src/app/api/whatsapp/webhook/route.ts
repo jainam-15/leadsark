@@ -70,7 +70,11 @@ export async function POST(req: Request) {
     console.log(`[WhatsApp Webhook] Available metadata:`, JSON.stringify(metadata || {}, null, 2));
 
     if (isStatusUpdate || !text) {
-      console.log("[WhatsApp Webhook] Ignored (status update or no message body)");
+      if (isStatusUpdate) {
+        console.log(`[WhatsApp Webhook] Received status update for message: ${body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id}`);
+      } else {
+        console.log("[WhatsApp Webhook] Ignored (no message body)");
+      }
       return NextResponse.json({ status: "ignored" });
     }
 
@@ -106,10 +110,22 @@ export async function POST(req: Request) {
     console.log(`[WhatsApp Webhook] Connection FOUND. Mapped to Business ID: ${connection.business_id}`);
     const businessId = connection.business_id;
 
+    // 2.5 Check for duplicate message
+    const { data: existingMsg } = await supabaseAdmin
+      .from('messages')
+      .select('id')
+      .eq('whatsapp_message_id', messageId)
+      .maybeSingle();
+
+    if (existingMsg) {
+      console.log(`[WhatsApp Webhook] Duplicate message ignored: ${messageId}`);
+      return NextResponse.json({ success: true, duplicate: true });
+    }
+
     // 3. Lead Handling (Upsert)
     const { data: existingLead, error: leadError } = await supabaseAdmin
       .from('leads')
-      .select('id, last_message_at')
+      .select('id, last_message_at, status')
       .eq('business_id', businessId)
       .eq('whatsapp_phone', senderPhone)
       .maybeSingle();
@@ -141,7 +157,10 @@ export async function POST(req: Request) {
       leadId = existingLead.id;
       await supabaseAdmin
         .from('leads')
-        .update({ last_message_at: new Date().toISOString() })
+        .update({ 
+          last_message_at: new Date().toISOString(),
+          status: existingLead.status === 'Lost' ? 'Cold' : existingLead.status // Re-activate lost leads if they message back
+        })
         .eq('id', leadId);
     }
 
@@ -159,7 +178,7 @@ export async function POST(req: Request) {
     if (isNewLead) {
       const { data: settings } = await supabaseAdmin
         .from('settings')
-        .select('auto_reply_enabled')
+        .select('auto_reply_enabled, greeting_message')
         .eq('business_id', businessId)
         .single();
 
@@ -172,7 +191,7 @@ export async function POST(req: Request) {
           .single();
 
         if (secrets?.access_token) {
-          const greeting = `Hello! Thanks for reaching out to us. How can we help you today?`;
+          const greeting = settings.greeting_message || `Hello! Thanks for reaching out to us. How can we help you today?`;
           
           const result = await sendWhatsAppMessage({
             accessToken: secrets.access_token,

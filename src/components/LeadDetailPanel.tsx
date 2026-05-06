@@ -51,7 +51,21 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
           <h2 className="font-h2 text-2xl font-black text-slate-900 leading-tight">{lead.name}</h2>
           <p className="text-sm font-bold text-wa-green uppercase tracking-wider">{lead.company}</p>
           
-          <div className="flex flex-col items-center gap-2 mt-4">
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-center gap-2 text-slate-600">
+              <span className="material-symbols-outlined text-sm">call</span>
+              <span className="text-sm font-medium">{lead.phone || 'No phone'}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-slate-500">
+              <span className="material-symbols-outlined text-sm">share</span>
+              <span className="text-xs uppercase font-bold tracking-tighter">Source: {lead.source || 'WhatsApp'}</span>
+            </div>
+            {lead.last_message_at && (
+              <p className="text-[10px] text-slate-400 uppercase font-black">Last message: {new Date(lead.last_message_at).toLocaleString()}</p>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-2 mt-6">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lead Score</span>
               <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
