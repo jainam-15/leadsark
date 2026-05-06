@@ -56,12 +56,24 @@ export async function POST(req: Request) {
     
     // 1. Parse Payload
     const data = parseWhatsAppPayload(body);
+    
     if (!data) {
-      console.log("[WhatsApp Webhook] No message data in payload (possibly status update)");
+      console.log("[WhatsApp Webhook] Failed to parse payload");
+      return NextResponse.json({ status: "parse_error" });
+    }
+
+    const { phoneNumberId, senderPhone, senderName, text, messageId, isStatusUpdate, metadata } = data;
+
+    // Task 1: Safe logging as requested
+    console.log(`[WhatsApp Webhook] Extracted phone_number_id: "${phoneNumberId}"`);
+    console.log(`[WhatsApp Webhook] Full payload path used: body.entry[0].changes[0].value.metadata.phone_number_id`);
+    console.log(`[WhatsApp Webhook] Available metadata:`, JSON.stringify(metadata || {}, null, 2));
+
+    if (isStatusUpdate || !text) {
+      console.log("[WhatsApp Webhook] Ignored (status update or no message body)");
       return NextResponse.json({ status: "ignored" });
     }
 
-    const { phoneNumberId, senderPhone, senderName, text, messageId } = data;
     console.log(`[WhatsApp Webhook] Parsed Message: from=${senderPhone}, phoneId=${phoneNumberId}, text="${text.substring(0, 20)}"`);
 
     // 2. Map to Business
@@ -72,12 +84,27 @@ export async function POST(req: Request) {
       .single();
 
     if (connError || !connection) {
-      console.warn("[WhatsApp Webhook] Connection not found for phone_number_id:", phoneNumberId);
-      return NextResponse.json({ status: "business_not_found" });
+      console.warn(`[WhatsApp Webhook] Connection NOT FOUND for phone_number_id: "${phoneNumberId}"`);
+      
+      // Task 5: Log existing phone_number_ids from whatsapp_connections
+      const { data: allConnections } = await supabaseAdmin
+        .from('whatsapp_connections')
+        .select('phone_number_id, business_id');
+      
+      const existingIds = allConnections?.map(c => c.phone_number_id) || [];
+      console.log(`[WhatsApp Webhook] Existing DB phone_number_ids:`, JSON.stringify(existingIds));
+      console.log(`[WhatsApp Webhook] Comparison: "${phoneNumberId}" vs [${existingIds.join(', ')}]`);
+
+      // Return 200 safely as requested by Meta to avoid retries
+      return NextResponse.json({ 
+        status: "business_not_found", 
+        extracted_id: phoneNumberId,
+        existing_ids: existingIds
+      }, { status: 200 });
     }
 
+    console.log(`[WhatsApp Webhook] Connection FOUND. Mapped to Business ID: ${connection.business_id}`);
     const businessId = connection.business_id;
-    console.log(`[WhatsApp Webhook] Mapped to Business ID: ${businessId}`);
 
     // 3. Lead Handling (Upsert)
     const { data: existingLead, error: leadError } = await supabaseAdmin

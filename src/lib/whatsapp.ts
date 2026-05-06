@@ -59,18 +59,35 @@ export function parseWhatsAppPayload(body: any) {
     const value = changes?.value;
     const message = value?.messages?.[0];
     const contact = value?.contacts?.[0];
+    const metadata = value?.metadata;
 
-    if (!message) return null;
+    // Support both message events and status updates/other events for phone_number_id extraction
+    let phoneNumberId = "";
+    if (metadata?.phone_number_id) {
+      phoneNumberId = String(metadata.phone_number_id);
+    } else if (body.entry?.[0]?.id) {
+      phoneNumberId = String(body.entry[0].id);
+    }
+
+    if (!message) {
+      return {
+        phoneNumberId,
+        isStatusUpdate: !!value?.statuses,
+        metadata
+      };
+    }
 
     return {
-      phoneNumberId: value.metadata?.phone_number_id,
-      displayPhoneNumber: value.metadata?.display_phone_number,
+      phoneNumberId,
+      displayPhoneNumber: metadata?.display_phone_number,
       senderName: contact?.profile?.name || "Unknown",
       senderPhone: message.from,
       messageId: message.id,
       timestamp: message.timestamp,
       type: message.type,
       text: message.text?.body || "",
+      isStatusUpdate: false,
+      metadata,
       raw: body
     };
   } catch (err) {
