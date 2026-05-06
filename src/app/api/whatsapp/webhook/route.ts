@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { parseWhatsAppPayload, sendWhatsAppMessage } from "@/lib/whatsapp";
 
+
 /**
  * GET: Webhook Verification
  * Used by Meta to verify the endpoint ownership.
@@ -47,17 +48,21 @@ export async function GET(req: Request) {
  * POST: Incoming Message Handler
  */
 export async function POST(req: Request) {
+  console.log("[WhatsApp Webhook] [POST HIT] Received request");
+  
   try {
     const body = await req.json();
+    console.log("[WhatsApp Webhook] Payload received:", JSON.stringify(body, null, 2).substring(0, 500));
     
     // 1. Parse Payload
     const data = parseWhatsAppPayload(body);
     if (!data) {
-      // It might be a status update (delivered, read), which we'll ignore for now
+      console.log("[WhatsApp Webhook] No message data in payload (possibly status update)");
       return NextResponse.json({ status: "ignored" });
     }
 
     const { phoneNumberId, senderPhone, senderName, text, messageId } = data;
+    console.log(`[WhatsApp Webhook] Parsed Message: from=${senderPhone}, phoneId=${phoneNumberId}, text="${text.substring(0, 20)}"`);
 
     // 2. Map to Business
     const { data: connection, error: connError } = await supabaseAdmin
@@ -67,11 +72,12 @@ export async function POST(req: Request) {
       .single();
 
     if (connError || !connection) {
-      console.warn("[WhatsApp Webhook] Received message for unknown phone_number_id:", phoneNumberId);
+      console.warn("[WhatsApp Webhook] Connection not found for phone_number_id:", phoneNumberId);
       return NextResponse.json({ status: "business_not_found" });
     }
 
     const businessId = connection.business_id;
+    console.log(`[WhatsApp Webhook] Mapped to Business ID: ${businessId}`);
 
     // 3. Lead Handling (Upsert)
     const { data: existingLead, error: leadError } = await supabaseAdmin
