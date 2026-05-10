@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
-import { ensureUserBusinessSetup } from '@/lib/auth-helpers';
+import { ensureUserBusinessSetupAction } from '@/app/actions/auth';
 
 interface AuthProfile {
   id: string;
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(authProfile.role);
       } else {
         console.warn("[Auth] No profile found, triggering idempotent setup...");
-        const setupResult = await ensureUserBusinessSetup(
+        const setupResult = await ensureUserBusinessSetupAction(
           u.id,
           u.email || '',
           u.user_metadata?.business_name || 'My Business',
