@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useMessages } from '@/hooks/useMessages';
+import TemplatePicker from './TemplatePicker';
 
 export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadName?: string; leadId?: string }) {
   const { messages, loading, sending, sendMessage } = useMessages(leadId);
@@ -92,6 +93,10 @@ export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadNam
         <button type="button" className="p-2 text-slate-500 hover:text-wa-green transition-colors">
           <span className="material-symbols-outlined">mood</span>
         </button>
+        <TemplatePicker 
+          lead={{ id: leadId, name: leadName }} 
+          onSelect={(content) => setInputText(content)} 
+        />
         <div className="flex-1">
           <input 
             value={inputText}

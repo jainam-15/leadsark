@@ -16,6 +16,7 @@ export function useSettings() {
     autoReply: true,
     autoReplyMode: "new_leads_only",
     greetingMessage: "Hello! Thanks for reaching out to us. How can we help you today?",
+    greetingTemplateId: "",
     workingHoursStart: "09:00",
     workingHoursEnd: "18:00",
     followupMode: "suggest_with_approval"
@@ -63,6 +64,7 @@ export function useSettings() {
           autoReply: settingsData.auto_reply_enabled,
           autoReplyMode: settingsData.auto_reply_mode || 'new_leads_only',
           greetingMessage: settingsData.greeting_message || '',
+          greetingTemplateId: settingsData.greeting_template_id || '',
           workingHoursStart: settingsData.working_hours_start || '09:00',
           workingHoursEnd: settingsData.working_hours_end || '18:00',
           followupMode: settingsData.followup_mode || 'suggest_with_approval'
@@ -117,6 +119,7 @@ export function useSettings() {
           auto_reply_enabled: newSettings.autoReply,
           auto_reply_mode: newSettings.autoReplyMode,
           greeting_message: newSettings.greetingMessage,
+          greeting_template_id: newSettings.greetingTemplateId || null,
           working_hours_start: newSettings.workingHoursStart,
           working_hours_end: newSettings.workingHoursEnd,
           followup_mode: newSettings.followupMode,

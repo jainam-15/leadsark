@@ -162,6 +162,17 @@ export async function POST(req: Request) {
           status: existingLead.status === 'Lost' ? 'Cold' : existingLead.status // Re-activate lost leads if they message back
         })
         .eq('id', leadId);
+
+      // PART 5: If pending manual follow-up exists for that lead, mark it completed
+      await supabaseAdmin
+        .from('followups')
+        .update({ 
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('lead_id', leadId)
+        .eq('status', 'pending')
+        .eq('send_mode', 'manual');
     }
 
     // 4. Store Message
@@ -174,11 +185,11 @@ export async function POST(req: Request) {
       raw_payload: body
     }]);
 
-    // 5. Auto-reply (Basic MVP)
+    // 5. Auto-reply (Enhanced with Templates)
     if (isNewLead) {
       const { data: settings } = await supabaseAdmin
         .from('settings')
-        .select('auto_reply_enabled, greeting_message')
+        .select('auto_reply_enabled, greeting_message, greeting_template_id')
         .eq('business_id', businessId)
         .single();
 
@@ -191,8 +202,36 @@ export async function POST(req: Request) {
           .single();
 
         if (secrets?.access_token) {
-          const greeting = settings.greeting_message || `Hello! Thanks for reaching out to us. How can we help you today?`;
+          let greeting = settings.greeting_message || `Hello! Thanks for reaching out to us. How can we help you today?`;
+          let templateToUse = null;
+
+          // 1. Check if a specific template is selected in settings
+          if (settings.greeting_template_id) {
+            const { data: selectedTemplate } = await supabaseAdmin
+              .from('message_templates')
+              .select('content')
+              .eq('id', settings.greeting_template_id)
+              .maybeSingle();
+            templateToUse = selectedTemplate;
+          }
+
+          // 2. Fallback to default greeting template if no specific one selected
+          if (!templateToUse) {
+            const { data: defaultTemplate } = await supabaseAdmin
+              .from('message_templates')
+              .select('content')
+              .eq('business_id', businessId)
+              .eq('category', 'greeting')
+              .eq('is_default', true)
+              .eq('is_active', true)
+              .maybeSingle();
+            templateToUse = defaultTemplate;
+          }
           
+          if (templateToUse) {
+            greeting = templateToUse.content.replace(/{{lead_name}}/g, senderName || "there");
+          }
+
           const result = await sendWhatsAppMessage({
             accessToken: secrets.access_token,
             phoneNumberId: phoneNumberId,

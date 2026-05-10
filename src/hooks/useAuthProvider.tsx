@@ -10,6 +10,7 @@ interface AuthProfile {
   email: string;
   full_name?: string;
   business_id?: string;
+  business_name?: string;
   role: 'admin' | 'user';
   email_confirmed: boolean;
 }
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(`[Auth] Fetching profile for: ${u.id}`);
       const { data, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, businesses(name)')
         .eq('id', u.id)
         .maybeSingle();
       
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.email,
           full_name: data.full_name,
           business_id: data.business_id,
+          business_name: (data.businesses as any)?.name || '',
           role: data.role || 'user',
           email_confirmed: !!u.email_confirmed_at
         };

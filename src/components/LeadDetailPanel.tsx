@@ -20,14 +20,6 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
   // Find next pending followup
   const nextFollowup = followUps.find(f => f.lead_id === lead.id && f.status === 'pending');
 
-  const handleSchedule = async () => {
-    if (!followupDate) return;
-    const res = await scheduleFollowup(lead.id, new Date(followupDate));
-    if (res.success) {
-      alert("Follow-up scheduled!");
-      setFollowupDate("");
-    }
-  };
 
   return (
     <section className="w-[25%] border-l border-slate-200/30 flex flex-col h-full bg-surface-container-low overflow-hidden">
@@ -135,31 +127,104 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
         </div>
 
         {/* Smart Follow-up Scheduling */}
-        <div className="space-y-3">
-          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Follow-up</h4>
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex justify-between items-center">
+            <span>Follow-up</span>
+            {nextFollowup && <button onClick={() => setFollowupDate("")} className="text-teal-600 hover:underline">Add New</button>}
+          </h4>
+          
           {nextFollowup ? (
             <div className="glass-panel p-4 rounded-xl border-wa-green/20 bg-wa-green/5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="material-symbols-outlined text-wa-green text-sm">event</span>
-                <span className="text-[10px] font-black text-slate-500 uppercase">Scheduled for</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase">Next: {new Date(nextFollowup.scheduled_at).toLocaleDateString()}</span>
               </div>
-              <p className="text-sm font-black text-slate-900">{new Date(nextFollowup.scheduled_at).toLocaleString()}</p>
-              <p className="text-[10px] text-wa-green font-bold mt-1 uppercase tracking-tighter">AI will suggest reply</p>
+              <h5 className="text-xs font-bold text-slate-900">{nextFollowup.title || "Scheduled Outreach"}</h5>
+              <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 italic">"{nextFollowup.message}"</p>
+              {nextFollowup.send_mode === 'automatic' && (
+                <div className="mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[12px] text-teal-600">auto_mode</span>
+                  <span className="text-[9px] font-black text-teal-600 uppercase tracking-tighter">AI Auto-send</span>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-2">
-              <input 
-                type="datetime-local" 
-                value={followupDate}
-                onChange={e => setFollowupDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-wa-green/20"
-              />
+            <div className="bg-white/50 p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Task Title</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. Check pricing interest"
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-slate-900/10"
+                  id="fu-title"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Date & Time</label>
+                <input 
+                  type="datetime-local" 
+                  value={followupDate}
+                  onChange={e => setFollowupDate(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-slate-900/10"
+                />
+                <div className="flex flex-wrap gap-1 mt-2">
+                   {[
+                     { label: 'Tmrw', val: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(10, 0, 0, 0); return d; }},
+                     { label: '3 Days', val: () => { const d = new Date(); d.setDate(d.getDate() + 3); d.setHours(10, 0, 0, 0); return d; }},
+                     { label: '1 Week', val: () => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(10, 0, 0, 0); return d; }},
+                   ].map(opt => (
+                     <button 
+                       key={opt.label}
+                       onClick={() => setFollowupDate(opt.val().toISOString().slice(0, 16))}
+                       className="text-[9px] font-black uppercase px-2 py-1 bg-slate-100 text-slate-500 rounded-md hover:bg-slate-200"
+                     >
+                       {opt.label}
+                     </button>
+                   ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Message</label>
+                <textarea 
+                  placeholder="Type follow-up message..."
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-slate-900/10 resize-none"
+                  rows={2}
+                  id="fu-message"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="fu-auto" className="rounded text-slate-900" />
+                <label htmlFor="fu-auto" className="text-[10px] font-bold text-slate-600">Send Automatically</label>
+              </div>
+
               <button 
-                onClick={handleSchedule}
+                onClick={async () => {
+                  const title = (document.getElementById('fu-title') as HTMLInputElement).value;
+                  const message = (document.getElementById('fu-message') as HTMLTextAreaElement).value;
+                  const auto = (document.getElementById('fu-auto') as HTMLInputElement).checked;
+                  
+                  if (!followupDate) return;
+
+                  const res = await scheduleFollowup({
+                    lead_id: lead.id,
+                    title: title || "Follow-up",
+                    message: message || "Following up on our conversation.",
+                    scheduled_at: new Date(followupDate).toISOString(),
+                    send_mode: auto ? 'automatic' : 'manual'
+                  });
+                  
+                  if (res.success) {
+                    setFollowupDate("");
+                    alert("Follow-up scheduled!");
+                  }
+                }}
                 disabled={!followupDate}
-                className="w-full py-2 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl disabled:opacity-50 hover:bg-slate-800 transition-all"
+                className="w-full py-2 bg-slate-900 text-white text-[10px] font-black uppercase rounded-xl disabled:opacity-50 hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
               >
-                Schedule Follow-up
+                Schedule Task
               </button>
             </div>
           )}
@@ -203,6 +268,28 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
               <span className="material-symbols-outlined text-sm">cancel</span>
               Lost
             </button>
+          </div>
+        </div>
+
+        {/* Follow-up History */}
+        <div className="space-y-3 pb-8">
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Recent History</h4>
+          <div className="space-y-2">
+            {followUps
+              .filter(f => f.lead_id === lead.id && f.status !== 'pending')
+              .slice(0, 3)
+              .map(f => (
+                <div key={f.id} className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-bold text-slate-700">{f.title || "Follow-up"}</span>
+                    <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${f.status === 'sent' ? 'bg-teal-50 text-teal-600' : 'bg-slate-200 text-slate-500'}`}>{f.status}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 italic line-clamp-1">"{f.message}"</p>
+                </div>
+              ))}
+            {followUps.filter(f => f.lead_id === lead.id && f.status !== 'pending').length === 0 && (
+              <p className="text-[10px] text-slate-400 italic px-1">No previous follow-ups.</p>
+            )}
           </div>
         </div>
       </div>

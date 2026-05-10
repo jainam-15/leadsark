@@ -2,20 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useSettings } from "@/hooks/useSettings";
-import { useAutomation, Template, FlowStep } from "@/hooks/useAutomation";
+import { useAutomation, FlowStep } from "@/hooks/useAutomation";
+import { useTemplates, MessageTemplate } from "@/hooks/useTemplates";
 import { WhatsAppSettings } from "@/components/WhatsAppSettings";
 
 type Tab = "profile" | "whatsapp" | "automation" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
-  const { profile, settings, loading, updateProfile, updateSettings } = useSettings();
-  const { templates, flows, saveTemplate, deleteTemplate, saveFlowStep, deleteFlowStep } = useAutomation();
+  const { profile, settings, loading: settingsLoading, updateProfile, updateSettings } = useSettings();
+  const { flows, saveFlowStep, deleteFlowStep } = useAutomation();
+  const { templates, loading: templatesLoading, createTemplate, updateTemplate, deleteTemplate } = useTemplates();
+
+  const loading = settingsLoading || templatesLoading;
 
   // Local state for forms
   const [localProfile, setLocalProfile] = useState(profile);
   const [localSettings, setLocalSettings] = useState(settings);
-  const [editingTemplate, setEditingTemplate] = useState<Partial<Template> | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<Partial<MessageTemplate> | null>(null);
   const [editingFlow, setEditingFlow] = useState<Partial<FlowStep> | null>(null);
 
   // Sync when loaded
@@ -177,6 +181,21 @@ export default function SettingsPage() {
                             <p className="text-[10px] text-slate-400 mt-2">This message will be sent automatically to new leads.</p>
                           </div>
                           <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">Default Greeting Template</label>
+                            <select 
+                              name="greetingTemplateId"
+                              value={localSettings.greetingTemplateId || ""} 
+                              onChange={handleSettingChange}
+                              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-medium"
+                            >
+                              <option value="">Use Custom Text (Fallback)</option>
+                              {templates.filter(t => t.category === 'greeting').map(t => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-slate-400 mt-2">Overrides the custom text if a template is selected.</p>
+                          </div>
+                          <div>
                             <label className="block text-sm font-bold text-slate-700 mb-2">Auto-Reply Mode</label>
                             <select 
                               name="autoReplyMode"
@@ -226,7 +245,7 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-slate-900">Message Templates</h2>
                   <button 
-                    onClick={() => setEditingTemplate({ name: '', type: 'greeting', content: '' })}
+                    onClick={() => setEditingTemplate({ name: '', category: 'reply', content: '' })}
                     className="px-4 py-2 bg-wa-green text-white rounded-lg text-xs font-bold shadow-md flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-[16px]">add</span> New Template
@@ -244,8 +263,8 @@ export default function SettingsPage() {
                         className="px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none text-sm"
                       />
                       <select 
-                        value={editingTemplate.type}
-                        onChange={e => setEditingTemplate({...editingTemplate, type: e.target.value as any})}
+                        value={editingTemplate.category}
+                        onChange={e => setEditingTemplate({...editingTemplate, category: e.target.value as any})}
                         className="px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none text-sm"
                       >
                         <option value="greeting">Greeting</option>
@@ -255,7 +274,7 @@ export default function SettingsPage() {
                       </select>
                     </div>
                     <textarea 
-                      placeholder="Message content... Use {{name}} and {{business_name}} as variables."
+                      placeholder="Message content... Use {{lead_name}} and {{business_name}} as variables."
                       value={editingTemplate.content}
                       onChange={e => setEditingTemplate({...editingTemplate, content: e.target.value})}
                       className="w-full h-32 px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm resize-none"
@@ -264,7 +283,9 @@ export default function SettingsPage() {
                       <button onClick={() => setEditingTemplate(null)} className="px-4 py-2 text-slate-500 font-bold text-sm">Cancel</button>
                       <button 
                         onClick={async () => {
-                          const res = await saveTemplate(editingTemplate);
+                          const res = editingTemplate.id 
+                            ? await updateTemplate(editingTemplate.id, editingTemplate)
+                            : await createTemplate(editingTemplate);
                           if (res.success) setEditingTemplate(null);
                         }}
                         className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm"
@@ -280,7 +301,7 @@ export default function SettingsPage() {
                     <div key={t.id} className="p-5 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all group">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black uppercase rounded tracking-widest">{t.type}</span>
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black uppercase rounded tracking-widest">{t.category}</span>
                           <h4 className="font-bold text-slate-900 mt-1">{t.name}</h4>
                         </div>
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
