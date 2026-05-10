@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
+import { ensureUserBusinessSetup } from '@/lib/auth-helpers';
 
 interface AuthProfile {
   id: string;
@@ -88,13 +89,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(authProfile);
         setRole(authProfile.role);
       } else {
-        console.warn("[Auth] No profile found for user row.");
-        setProfile(null);
-        setRole(null);
+        console.warn("[Auth] No profile found, triggering idempotent setup...");
+        const setupResult = await ensureUserBusinessSetup(
+          u.id,
+          u.email || '',
+          u.user_metadata?.business_name || 'My Business',
+          u.user_metadata?.full_name || u.email?.split('@')[0]
+        );
+        
+        if (setupResult.success) {
+          console.log("[Auth] Setup successful, refetching...");
+          // Refetch without recursion (call the same logic or just fetch again)
+          const { data: newData } = await supabase
+            .from('profiles')
+            .select('*, businesses(name)')
+            .eq('id', u.id)
+            .single();
+          
+          if (newData) {
+            const authProfile: AuthProfile = {
+              id: newData.id,
+              email: newData.email,
+              full_name: newData.full_name,
+              business_id: newData.business_id,
+              business_name: (newData.businesses as any)?.name || '',
+              role: newData.role || 'user',
+              email_confirmed: !!u.email_confirmed_at
+            };
+            setProfile(authProfile);
+            setRole(authProfile.role);
+          }
+        } else {
+          console.error("[Auth] Setup failed:", setupResult.error);
+          setProfile(null);
+          setRole(null);
+        }
       }
     } catch (err: any) {
-      console.error("[Auth] Profile fetch exception:", err);
-      setError(err.message);
+      console.error("[Auth] Profile fetch exception:", JSON.stringify(err, null, 2));
+      setError(err.message || "An unexpected error occurred during profile fetch.");
     } finally {
       setLoading(false);
     }

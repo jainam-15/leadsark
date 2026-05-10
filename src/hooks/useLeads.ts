@@ -13,7 +13,7 @@ const mockLeads: LeadType[] = [
 ];
 
 export function useLeads() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<LeadType[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,10 +24,10 @@ export function useLeads() {
       } else {
         setLoading(false);
       }
-    } else if (!useAuth().loading) {
+    } else if (!authLoading) {
        setLoading(false);
     }
-  }, [profile, useAuth().loading]);
+  }, [profile, authLoading]);
 
   const fetchLeads = async () => {
     setLoading(true);

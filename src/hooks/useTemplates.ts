@@ -16,7 +16,7 @@ export interface MessageTemplate {
 }
 
 export function useTemplates() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,11 +27,11 @@ export function useTemplates() {
       } else {
         setLoading(false);
       }
-    } else if (!useAuth().loading) {
+    } else if (!authLoading) {
        // Auth finished but no profile
        setLoading(false);
     }
-  }, [profile, useAuth().loading]);
+  }, [profile, authLoading]);
 
   const fetchTemplates = async () => {
     setLoading(true);

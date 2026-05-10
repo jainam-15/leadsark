@@ -5,7 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
 export function useSettings() {
-  const { user, profile: authProfile } = useAuth();
+  const { user, profile: authProfile, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -30,10 +30,10 @@ export function useSettings() {
       } else {
         setLoading(false);
       }
-    } else if (!useAuth().loading) {
+    } else if (!authLoading) {
        setLoading(false);
     }
-  }, [authProfile, useAuth().loading]);
+  }, [authProfile, authLoading]);
 
   const fetchSettings = async () => {
     setLoading(true);

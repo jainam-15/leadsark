@@ -22,7 +22,7 @@ export interface Followup {
 }
 
 export function useFollowups() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [followUps, setFollowUps] = useState<Followup[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,10 +33,10 @@ export function useFollowups() {
       } else {
         setLoading(false);
       }
-    } else if (!useAuth().loading) {
+    } else if (!authLoading) {
        setLoading(false);
     }
-  }, [profile, useAuth().loading]);
+  }, [profile, authLoading]);
 
   const fetchFollowups = async () => {
     setLoading(true);
