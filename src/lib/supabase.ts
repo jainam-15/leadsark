@@ -8,3 +8,12 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+// Safe runtime check
+if (typeof window !== 'undefined') {
+  console.log('[Supabase] Frontend check:', {
+    urlFound: !!supabaseUrl,
+    keyFound: !!supabaseAnonKey,
+    configured: isSupabaseConfigured
+  });
+}
