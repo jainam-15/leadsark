@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/leads", label: "Leads", icon: "person_search" },
   { href: "/conversations", label: "Conversations", icon: "chat_bubble" },
   { href: "/follow-ups", label: "Follow-ups", icon: "event_repeat" },
+  { href: "/templates", label: "Templates", icon: "description" },
   { href: "/analytics", label: "Analytics", icon: "analytics" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
