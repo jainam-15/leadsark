@@ -18,13 +18,19 @@ export default function TemplatesPage() {
       is_default: formData.get("is_default") === "on",
     };
 
+    let result;
     if (editingTemplate?.id) {
-      await updateTemplate(editingTemplate.id, data);
+      result = await updateTemplate(editingTemplate.id, data);
     } else {
-      await createTemplate(data);
+      result = await createTemplate(data);
     }
-    setIsModalOpen(false);
-    setEditingTemplate(null);
+
+    if (result.success) {
+      setIsModalOpen(false);
+      setEditingTemplate(null);
+    } else {
+      alert("Error saving template: " + result.error);
+    }
   };
 
   const openEdit = (tpl: MessageTemplate) => {
