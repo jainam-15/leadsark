@@ -24,9 +24,16 @@ export function useSettings() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !authProfile?.business_id) return;
-    fetchSettings();
-  }, [user, authProfile?.business_id]);
+    if (authProfile) {
+      if (authProfile.business_id) {
+        fetchSettings();
+      } else {
+        setLoading(false);
+      }
+    } else if (!useAuth().loading) {
+       setLoading(false);
+    }
+  }, [authProfile, useAuth().loading]);
 
   const fetchSettings = async () => {
     setLoading(true);

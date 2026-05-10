@@ -18,9 +18,16 @@ export function useLeads() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !profile?.business_id) return;
-    fetchLeads();
-  }, [user, profile?.business_id]);
+    if (profile) {
+      if (profile.business_id) {
+        fetchLeads();
+      } else {
+        setLoading(false);
+      }
+    } else if (!useAuth().loading) {
+       setLoading(false);
+    }
+  }, [profile, useAuth().loading]);
 
   const fetchLeads = async () => {
     setLoading(true);

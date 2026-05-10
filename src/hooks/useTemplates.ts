@@ -21,10 +21,17 @@ export function useTemplates() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (profile?.business_id) {
-      fetchTemplates();
+    if (profile) {
+      if (profile.business_id) {
+        fetchTemplates();
+      } else {
+        setLoading(false);
+      }
+    } else if (!useAuth().loading) {
+       // Auth finished but no profile
+       setLoading(false);
     }
-  }, [profile?.business_id]);
+  }, [profile, useAuth().loading]);
 
   const fetchTemplates = async () => {
     setLoading(true);

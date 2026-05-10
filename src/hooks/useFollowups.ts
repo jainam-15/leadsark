@@ -27,10 +27,16 @@ export function useFollowups() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (profile?.business_id) {
-      fetchFollowups();
+    if (profile) {
+      if (profile.business_id) {
+        fetchFollowups();
+      } else {
+        setLoading(false);
+      }
+    } else if (!useAuth().loading) {
+       setLoading(false);
     }
-  }, [profile?.business_id]);
+  }, [profile, useAuth().loading]);
 
   const fetchFollowups = async () => {
     setLoading(true);
