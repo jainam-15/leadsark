@@ -92,33 +92,44 @@ export default function TemplatesPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md"
             onClick={() => setIsModalOpen(false)}
           ></div>
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h2 className="font-bold text-slate-900">{editingTemplate ? 'Edit Template' : 'New Template'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined">close</span></button>
+          
+          <div 
+            className="relative bg-white rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] w-full max-w-[500px] min-h-[400px] flex flex-col overflow-hidden"
+            style={{ minWidth: '300px' }}
+          >
+            <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
+              <h2 className="text-xl font-black text-slate-900">{editingTemplate ? 'Edit Template' : 'New Template'}</h2>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div className="space-y-1">
+            
+            <form onSubmit={handleSave} className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Template Name</label>
                 <input 
                   name="name"
                   defaultValue={editingTemplate?.name}
                   placeholder="e.g. Welcome Message"
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium"
                   required
                 />
               </div>
-              <div className="space-y-1">
+              
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Category</label>
                 <select 
                   name="category"
                   defaultValue={editingTemplate?.category || "reply"}
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium"
                 >
                   <option value="greeting">Greeting</option>
                   <option value="reply">Reply</option>
@@ -126,41 +137,49 @@ export default function TemplatesPage() {
                   <option value="closing">Closing</option>
                 </select>
               </div>
-              <div className="space-y-1">
+              
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Message Content</label>
                 <textarea 
                   name="content"
                   defaultValue={editingTemplate?.content}
-                  rows={4}
+                  rows={5}
                   placeholder="Hello {{lead_name}}..."
-                  className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/20 resize-none"
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-medium resize-none"
                   required
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Available variables: {"{{lead_name}}"}, {"{{business_name}}"}, {"{{phone}}"}</p>
+                <p className="text-[10px] text-slate-400 mt-2 px-1 leading-relaxed">
+                  Available variables: <code className="bg-slate-100 px-1 rounded">{"{{lead_name}}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{{business_name}}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{{phone}}"}</code>
+                </p>
               </div>
-              <div className="flex items-center gap-2 px-1">
-                <input 
-                  type="checkbox" 
-                  id="is_default" 
-                  name="is_default" 
-                  defaultChecked={editingTemplate?.is_default}
-                  className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500"
-                />
+              
+              <div className="flex items-center gap-3 px-1 py-2">
+                <div className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    id="is_default" 
+                    name="is_default" 
+                    defaultChecked={editingTemplate?.is_default}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-wa-green"></div>
+                </div>
                 <label htmlFor="is_default" className="text-xs font-bold text-slate-600 cursor-pointer">Set as default for this category</label>
               </div>
-              <div className="pt-4 flex gap-3">
+              
+              <div className="pt-6 flex gap-4">
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10"
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
                 >
-                  Save Template
+                  {editingTemplate ? 'Update' : 'Create'} Template
                 </button>
               </div>
             </form>
