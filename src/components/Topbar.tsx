@@ -6,7 +6,7 @@ export default function Topbar() {
   const { user } = useAuth();
 
   return (
-    <header className="fixed top-0 right-0 left-64 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200/20 z-40 flex justify-between items-center px-6 shadow-[0_10px_30px_-5px_rgba(55,48,163,0.08)]">
+    <header className="fixed top-0 right-0 left-64 h-16 bg-white border-b border-slate-200/20 z-40 flex justify-between items-center px-6 shadow-[0_10px_30px_-5px_rgba(55,48,163,0.08)]">
       <div className="flex items-center gap-4 bg-surface-container-low px-4 py-2 rounded-full w-96 border border-slate-200/50">
         <span className="material-symbols-outlined text-slate-400">search</span>
         <input 

@@ -40,7 +40,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="h-screen w-64 fixed left-0 top-0 border-r border-slate-200/30 bg-white/80 backdrop-blur-xl flex flex-col py-6 px-4 gap-2 z-50 shadow-xl">
+      <aside className="h-screen w-64 fixed left-0 top-0 border-r border-slate-200/30 bg-white flex flex-col py-6 px-4 gap-2 z-50 shadow-xl">
         <div className="mb-8 px-2 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white shadow-lg overflow-hidden">
             <span className="material-symbols-outlined text-white">rocket_launch</span>

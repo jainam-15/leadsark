@@ -29,9 +29,9 @@ export default function DashboardLayout({
 
   if (loading || !user || role === 'admin') {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 gap-4">
-        <div className="w-12 h-12 border-4 border-slate-200 border-t-primary rounded-full animate-spin"></div>
-        <p className="font-bold text-slate-400 animate-pulse">Loading Workspace...</p>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-[9999] gap-4">
+        <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+        <p className="font-bold text-slate-900 text-sm tracking-tight">Loading Workspace...</p>
       </div>
     );
   }
