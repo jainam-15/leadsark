@@ -163,23 +163,23 @@ export default function FollowUpsPage() {
 
       {/* Create Follow-up Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <h2 className="font-bold text-slate-900">New Follow-up Task</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <span className="material-symbols-outlined">close</span>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[500px] min-h-[400px] overflow-hidden flex flex-col scale-100 opacity-100 transition-transform">
+            <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
+              <h2 className="text-lg font-bold text-slate-900">New Follow-up Task</h2>
+              <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors">
+                <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
             
-            <form onSubmit={handleCreateFollowup} className="p-6 space-y-4">
+            <form onSubmit={handleCreateFollowup} className="p-8 space-y-6">
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Select Lead</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Select Lead</label>
                 <select 
                   required
                   value={newFollowup.lead_id}
                   onChange={e => setNewFollowup({...newFollowup, lead_id: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium"
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium transition-all"
                 >
                   <option value="">Choose a lead...</option>
                   {leads.map(lead => (
@@ -189,44 +189,44 @@ export default function FollowUpsPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Task Title</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Task Title</label>
                 <input 
                   type="text" 
                   required
                   placeholder="e.g. Call to discuss pricing"
                   value={newFollowup.title}
                   onChange={e => setNewFollowup({...newFollowup, title: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm"
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Follow-up Message</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Follow-up Message</label>
                 <textarea 
                   placeholder="What needs to be discussed? (Used for automatic send)"
                   value={newFollowup.message}
                   onChange={e => setNewFollowup({...newFollowup, message: e.target.value})}
-                  className="w-full h-24 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm resize-none"
+                  className="w-full h-28 px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm resize-none transition-all"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Schedule For</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Schedule For</label>
                   <input 
                     type="datetime-local" 
                     required
                     value={newFollowup.scheduled_at}
                     onChange={e => setNewFollowup({...newFollowup, scheduled_at: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm"
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Send Mode</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Send Mode</label>
                   <select 
                     value={newFollowup.send_mode}
                     onChange={e => setNewFollowup({...newFollowup, send_mode: e.target.value as any})}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium"
+                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium transition-all"
                   >
                     <option value="manual">Manual (I will send)</option>
                     <option value="automatic">Automatic (System sends)</option>
@@ -234,18 +234,18 @@ export default function FollowUpsPage() {
                 </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
+              <div className="pt-6 flex gap-4">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-2.5 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-xl transition-all"
+                  className="flex-1 py-3 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-2xl transition-all"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
                   disabled={isSaving}
-                  className="flex-[2] py-2.5 bg-slate-900 text-white rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-sm flex items-center justify-center gap-2"
+                  className="flex-[2] py-3 bg-slate-900 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                   {isSaving ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
