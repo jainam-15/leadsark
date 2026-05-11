@@ -21,6 +21,8 @@ export default function SettingsPage() {
   const [localSettings, setLocalSettings] = useState(settings);
   const [editingTemplate, setEditingTemplate] = useState<Partial<MessageTemplate> | null>(null);
   const [editingFlow, setEditingFlow] = useState<Partial<FlowStep> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Sync when loaded
   useEffect(() => {
@@ -44,21 +46,35 @@ export default function SettingsPage() {
     const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
     const updated = { ...localSettings, [name]: val };
     setLocalSettings(updated);
-    updateSettings(updated);
+    setSaveStatus('idle');
+  };
+
+  const saveAutomation = async () => {
+    setIsSaving(true);
+    setSaveStatus('idle');
+    const res = await updateSettings(localSettings);
+    if (res.success) {
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } else {
+      setSaveStatus('error');
+      alert("Error saving settings: " + res.error);
+    }
+    setIsSaving(false);
   };
 
   const toggleAutoReply = () => {
     const newVal = !localSettings.autoReply;
     const updated = { ...localSettings, autoReply: newVal };
     setLocalSettings(updated);
-    updateSettings(updated);
+    setSaveStatus('idle');
   };
 
   const handleWorkingHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const updated = { ...localSettings, [name]: value };
     setLocalSettings(updated);
-    updateSettings(updated);
+    setSaveStatus('idle');
   };
 
   if (loading) {
@@ -236,6 +252,38 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     )}
+                    
+                    <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {saveStatus === 'success' && (
+                          <span className="flex items-center gap-1 text-wa-green text-xs font-bold animate-in fade-in duration-300">
+                            <span className="material-symbols-outlined text-[16px]">check_circle</span> Settings Saved
+                          </span>
+                        )}
+                        {saveStatus === 'error' && (
+                          <span className="text-red-500 text-xs font-bold">Failed to save</span>
+                        )}
+                      </div>
+                      <button 
+                        onClick={saveAutomation}
+                        disabled={isSaving}
+                        className={`px-8 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all flex items-center gap-2 ${
+                          isSaving ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-slate-900 text-white hover:shadow-lg'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[18px]">save</span>
+                            Save Automation Rules
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>
