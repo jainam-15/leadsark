@@ -7,6 +7,8 @@ export default function TemplatesPage() {
   const { templates, loading, createTemplate, updateTemplate, deleteTemplate } = useTemplates();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Partial<MessageTemplate> | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<{message: string, details?: string, code?: string} | null>(null);
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -18,18 +20,30 @@ export default function TemplatesPage() {
       is_default: formData.get("is_default") === "on",
     };
 
+    setSaveError(null);
+    setIsSaving(true);
+    
     let result;
-    if (editingTemplate?.id) {
-      result = await updateTemplate(editingTemplate.id, data);
-    } else {
-      result = await createTemplate(data);
-    }
+    try {
+      if (editingTemplate?.id) {
+        result = await updateTemplate(editingTemplate.id, data);
+      } else {
+        result = await createTemplate(data);
+      }
 
-    if (result.success) {
-      setIsModalOpen(false);
-      setEditingTemplate(null);
-    } else {
-      alert("Error saving template: " + result.error);
+      if (result.success) {
+        setIsModalOpen(false);
+        setEditingTemplate(null);
+      } else {
+        const err = result.error as any;
+        setSaveError({
+          message: err.message || "Unknown error",
+          details: err.details,
+          code: err.code
+        });
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -40,6 +54,7 @@ export default function TemplatesPage() {
 
   const openNew = () => {
     setEditingTemplate(null);
+    setSaveError(null);
     setIsModalOpen(true);
   };
 
@@ -119,6 +134,17 @@ export default function TemplatesPage() {
             </div>
             
             <form onSubmit={handleSave} className="p-8 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+              {saveError && (
+                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl space-y-1">
+                  <div className="flex items-center gap-2 text-red-700 font-bold text-sm">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {saveError.message}
+                  </div>
+                  {saveError.details && <p className="text-[10px] text-red-500 font-medium pl-6">{saveError.details}</p>}
+                  {saveError.code && <p className="text-[10px] text-red-400 font-mono pl-6">Error code: {saveError.code}</p>}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Template Name</label>
                 <input 
@@ -177,15 +203,24 @@ export default function TemplatesPage() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                  disabled={isSaving}
+                  className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95"
+                  disabled={isSaving}
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {editingTemplate ? 'Update' : 'Create'} Template
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>{editingTemplate ? 'Update' : 'Create'} Template</>
+                  )}
                 </button>
               </div>
             </form>

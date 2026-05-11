@@ -58,43 +58,63 @@ export function useTemplates() {
   };
 
   const createTemplate = async (template: Partial<MessageTemplate>) => {
-    if (!supabase || !profile?.business_id) return { success: false };
+    if (!supabase) return { success: false, error: { message: "Supabase client not initialized" } };
+    if (!profile?.business_id) return { success: false, error: { message: "Business ID not found in profile" } };
 
     try {
+      // Sync category to type for legacy support/constraints
+      const payload = {
+        ...template,
+        business_id: profile.business_id,
+        type: template.category || (template as any).type,
+        variables: template.variables || []
+      };
+
       const { error } = await supabase
         .from('message_templates')
-        .insert([{
-          ...template,
-          business_id: profile.business_id
-        }]);
+        .insert([payload]);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase insert error:", error);
+        return { success: false, error };
+      }
+      
       await fetchTemplates();
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      console.error("Unexpected createTemplate error:", err);
+      return { success: false, error: { message: err.message || "An unexpected error occurred" } };
     }
   };
 
   const updateTemplate = async (id: string, updates: Partial<MessageTemplate>) => {
-    if (!supabase) return { success: false };
+    if (!supabase) return { success: false, error: { message: "Supabase client not initialized" } };
     
     try {
+      // Sync category to type if present
+      const payload: any = { ...updates };
+      if (updates.category) payload.type = updates.category;
+
       const { error } = await supabase
         .from('message_templates')
-        .update(updates)
+        .update(payload)
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase update error:", error);
+        return { success: false, error };
+      }
+      
       await fetchTemplates();
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      console.error("Unexpected updateTemplate error:", err);
+      return { success: false, error: { message: err.message || "An unexpected error occurred" } };
     }
   };
 
   const deleteTemplate = async (id: string) => {
-    if (!supabase) return { success: false };
+    if (!supabase) return { success: false, error: { message: "Supabase client not initialized" } };
     try {
       // We usually deactivate instead of delete
       const { error } = await supabase
@@ -102,11 +122,16 @@ export function useTemplates() {
         .update({ is_active: false })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase delete error:", error);
+        return { success: false, error };
+      }
+      
       await fetchTemplates();
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      console.error("Unexpected deleteTemplate error:", err);
+      return { success: false, error: { message: err.message || "An unexpected error occurred" } };
     }
   };
 
