@@ -12,10 +12,10 @@ export interface Lead {
 }
 
 const leads: Lead[] = [
-  { id: '1', name: 'Sarah Jenkins', email: 'sarah.j@example.com', initials: 'SJ', status: 'Hot', lastActivity: '24 mins ago', color: 'teal' },
-  { id: '2', name: 'Marcus Knight', email: 'm.knight@web.com', initials: 'MK', status: 'Warm', lastActivity: '2 hours ago', color: 'amber' },
-  { id: '3', name: 'Elena Loft', email: 'e.loft@corp.io', initials: 'EL', status: 'Cold', lastActivity: '5 hours ago', color: 'slate' },
-  { id: '4', name: 'David Ross', email: 'david@ross.me', initials: 'DR', status: 'Hot', lastActivity: 'Yesterday', color: 'red' },
+  { id: '1', name: 'Sarah Jenkins', email: 'sarah.j@example.com', initials: 'SJ', status: 'Hot', lastActivity: 'Today • 2:30 PM', color: 'teal' },
+  { id: '2', name: 'Marcus Knight', email: 'm.knight@web.com', initials: 'MK', status: 'Warm', lastActivity: 'Today • 11:45 AM', color: 'amber' },
+  { id: '3', name: 'Elena Loft', email: 'e.loft@corp.io', initials: 'EL', status: 'Cold', lastActivity: 'Yesterday • 4:15 PM', color: 'slate' },
+  { id: '4', name: 'David Ross', email: 'david@ross.me', initials: 'DR', status: 'Hot', lastActivity: 'May 10 • 9:00 AM', color: 'red' },
 ];
 
 const colorMap = {

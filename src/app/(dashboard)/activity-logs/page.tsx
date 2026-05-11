@@ -2,11 +2,11 @@ import React from "react";
 
 export default function ActivityLogsPage() {
   const logs = [
-    { id: 1, action: "Logged in", user: "Alex Rivera", time: "10 mins ago", ip: "192.168.1.1" },
-    { id: 2, action: "Exported Leads", user: "Alex Rivera", time: "1 hour ago", ip: "192.168.1.1" },
-    { id: 3, action: "Updated Settings", user: "Lisa Wong", time: "2 hours ago", ip: "10.0.0.5" },
-    { id: 4, action: "Deleted Contact", user: "Alex Rivera", time: "Yesterday", ip: "192.168.1.1" },
-    { id: 5, action: "Created API Key", user: "System", time: "May 10, 2026", ip: "Internal" },
+    { id: 1, action: "Logged in", user: "Alex Rivera", time: "Today • 2:30 PM", ip: "192.168.1.1" },
+    { id: 2, action: "Exported Leads", user: "Alex Rivera", time: "Today • 11:45 AM", ip: "192.168.1.1" },
+    { id: 3, action: "Updated Settings", user: "Lisa Wong", time: "Yesterday • 4:15 PM", ip: "10.0.0.5" },
+    { id: 4, action: "Deleted Contact", user: "Alex Rivera", time: "Yesterday • 9:00 AM", ip: "192.168.1.1" },
+    { id: 5, action: "Created API Key", user: "System", time: "May 10 • 10:00 AM", ip: "Internal" },
   ];
 
   return (

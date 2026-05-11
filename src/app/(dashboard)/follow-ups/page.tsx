@@ -3,6 +3,7 @@
 import { useFollowups, Followup } from "@/hooks/useFollowups";
 import { useLeads } from "@/hooks/useLeads";
 import { useState } from "react";
+import { formatDateTime12Hour, formatTime12Hour } from "@/lib/date-utils";
 
 export default function FollowUpsPage() {
   const { followUps, loading, scheduleFollowup, updateFollowup, deleteFollowup, sendNow, toggleComplete } = useFollowups();
@@ -150,7 +151,7 @@ export default function FollowUpsPage() {
                    </span>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-2 italic">
-                  {f.sent_at ? `Completed on ${new Date(f.sent_at).toLocaleString()}` : `Closed on ${new Date(f.updated_at || "").toLocaleString()}`}
+                  {f.sent_at ? `Completed on ${formatDateTime12Hour(f.sent_at)}` : `Closed on ${formatDateTime12Hour(f.updated_at || "")}`}
                 </p>
               </div>
             ))}
@@ -278,9 +279,8 @@ function FollowupCard({ followup, onSend, onSkip, onComplete, isOverdue }: {
         </div>
         <div className="text-right">
           <p className={`text-[10px] font-black uppercase ${isOverdue ? 'text-error' : 'text-slate-500'}`}>
-            {new Date(followup.scheduled_at).toLocaleDateString()}
+            {formatDateTime12Hour(followup.scheduled_at)}
           </p>
-          <p className="text-[10px] font-medium text-slate-400">{new Date(followup.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
       </div>
 

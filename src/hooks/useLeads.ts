@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { LeadType, LeadStatus } from '@/app/(dashboard)/leads/page';
 import { useAuth } from './useAuth';
+import { formatRelativeTime } from '@/lib/date-utils';
 
 const mockLeads: LeadType[] = [
-  { id: '1', name: "Sarah Jenkins", company: "CloudScale Systems", status: "Hot", snippet: "Can you send over the pricing tier...", time: "2 mins ago", unreadCount: 3 },
-  { id: '2', name: "Marcus Thorne", company: "Vertex Media Group", status: "Warm", snippet: "I will check with my department head...", time: "2h", overdue: true },
-  { id: '3', name: "Elena Rodriguez", company: "NexGen Logistics", status: "Cold", snippet: "Not interested at this moment...", time: "3 hours ago" },
-  { id: '4', name: "David Chang", company: "Innovate Labs", status: "Hot", snippet: "Ready to sign the contract...", time: "5 hours ago" },
+  { id: '1', name: "Sarah Jenkins", company: "CloudScale Systems", status: "Hot", snippet: "Can you send over the pricing tier...", time: "Today • 2:45 PM", unreadCount: 3 },
+  { id: '2', name: "Marcus Thorne", company: "Vertex Media Group", status: "Warm", snippet: "I will check with my department head...", time: "Yesterday • 4:20 PM", overdue: true },
+  { id: '3', name: "Elena Rodriguez", company: "NexGen Logistics", status: "Cold", snippet: "Not interested at this moment...", time: "May 10 • 11:30 AM" },
+  { id: '4', name: "David Chang", company: "Innovate Labs", status: "Hot", snippet: "Ready to sign the contract...", time: "May 9 • 9:15 AM" },
 ];
 
 export function useLeads() {
@@ -70,9 +71,7 @@ export function useLeads() {
             company: dbLead.company || 'Unknown',
             status: dbLead.status as LeadStatus,
             snippet: latestMsg?.content || 'No recent messages',
-            time: dbLead.last_message_at 
-              ? new Date(dbLead.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              : new Date(dbLead.created_at).toLocaleDateString(),
+            time: formatRelativeTime(dbLead.last_message_at || dbLead.created_at),
             phone: dbLead.phone || dbLead.whatsapp_phone,
             source: dbLead.source,
             last_message_at: dbLead.last_message_at,

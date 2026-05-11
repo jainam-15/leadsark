@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
+import { formatTime12Hour, formatDateTime12Hour } from '@/lib/date-utils';
 
 export interface Message {
   id: string;
@@ -14,9 +15,9 @@ export interface Message {
 }
 
 const mockMessages: Message[] = [
-  { id: '1', text: "Hi Alex, we reviewed the initial proposal you sent last Tuesday. The team is quite impressed with the automation features.", time: "16:12", isSent: false, dateStr: "Yesterday" },
-  { id: '2', text: "That's fantastic to hear! We designed those features specifically for teams looking to reduce manual entry by 40%.", time: "16:15", isSent: true },
-  { id: '3', text: "Can you send over the pricing tier for the enterprise plan? We are looking to scale by next month and need to finalize the budget today.", time: "09:45", isSent: false, dateStr: "Today" },
+  { id: '1', text: "Hi Alex, we reviewed the initial proposal you sent last Tuesday. The team is quite impressed with the automation features.", time: "4:12 PM", isSent: false, dateStr: "Yesterday • 4:12 PM" },
+  { id: '2', text: "That's fantastic to hear! We designed those features specifically for teams looking to reduce manual entry by 40%.", time: "4:15 PM", isSent: true, dateStr: "Yesterday • 4:15 PM" },
+  { id: '3', text: "Can you send over the pricing tier for the enterprise plan? We are looking to scale by next month and need to finalize the budget today.", time: "9:45 AM", isSent: false, dateStr: "Today • 9:45 AM" },
 ];
 
 export function useMessages(leadId?: string) {
@@ -51,8 +52,9 @@ export function useMessages(leadId?: string) {
               id: newMsg.id,
               whatsapp_message_id: newMsg.whatsapp_message_id,
               text: newMsg.content,
-              time: new Date(newMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              isSent: newMsg.direction === 'outgoing'
+              time: formatTime12Hour(newMsg.created_at),
+              isSent: newMsg.direction === 'outgoing',
+              dateStr: formatDateTime12Hour(newMsg.created_at)
             }];
           });
         }
@@ -85,9 +87,9 @@ export function useMessages(leadId?: string) {
           id: dbMsg.id,
           whatsapp_message_id: dbMsg.whatsapp_message_id,
           text: dbMsg.content,
-          time: new Date(dbMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          time: formatTime12Hour(dbMsg.created_at),
           isSent: dbMsg.direction === 'outgoing',
-          dateStr: new Date(dbMsg.created_at).toLocaleDateString()
+          dateStr: formatDateTime12Hour(dbMsg.created_at)
         }));
         setMessages(formatted);
       }

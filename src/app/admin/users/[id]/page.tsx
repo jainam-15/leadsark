@@ -5,6 +5,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getDaysRemaining, getSubscriptionStatusLabel, getPlanDetails } from "@/lib/subscription-utils";
+import { formatDateTime12Hour } from "@/lib/date-utils";
 
 export default function UserDetailPage() {
   const { id } = useParams();
@@ -105,7 +106,7 @@ export default function UserDetailPage() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase">Joined</label>
-                  <div className="font-bold text-slate-900">{new Date(business.created_at).toLocaleDateString()}</div>
+                  <div className="font-bold text-slate-900">{formatDateTime12Hour(business.created_at)}</div>
                 </div>
               </div>
             </div>
@@ -128,7 +129,7 @@ export default function UserDetailPage() {
               <div className="flex justify-between text-xs">
                 <span className="text-slate-500 font-bold uppercase">End Date</span>
                 <span className="font-black">
-                  {subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString() : 'N/A'}
+                  {subscription?.end_date ? formatDateTime12Hour(subscription.end_date) : 'N/A'}
                 </span>
               </div>
             </div>

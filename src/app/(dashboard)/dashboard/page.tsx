@@ -115,7 +115,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900 leading-tight">Sarah Jenkins <span className="font-normal text-slate-500">requested pricing</span></p>
-                  <p className="text-[10px] text-slate-400 mt-1">12 mins ago • WhatsApp</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Today • 2:45 PM</p>
                 </div>
               </div>
 
@@ -127,7 +127,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900 leading-tight">New lead <span className="font-normal text-slate-500">from Facebook</span></p>
-                  <p className="text-[10px] text-slate-400 mt-1">45 mins ago • Social Media</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Today • 11:15 AM</p>
                 </div>
               </div>
 
@@ -139,7 +139,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900 leading-tight">Marcus Knight <span className="font-normal text-slate-500">missed follow-up</span></p>
-                  <p className="text-[10px] text-slate-400 mt-1">2 hours ago • System</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Yesterday • 4:20 PM</p>
                 </div>
               </div>
 
@@ -150,7 +150,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-slate-900 leading-tight">Campaign <span className="font-normal text-slate-500">"Winter Promo" launched</span></p>
-                  <p className="text-[10px] text-slate-400 mt-1">5 hours ago • Email</p>
+                  <p className="text-[10px] text-slate-400 mt-1">May 10 • 9:30 AM</p>
                 </div>
               </div>
             </div>

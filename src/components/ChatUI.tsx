@@ -5,6 +5,7 @@ import { useMessages } from '@/hooks/useMessages';
 import TemplatePicker from './TemplatePicker';
 import { canSendFreeformMessage } from '@/lib/whatsapp';
 import { useLeads } from '@/hooks/useLeads';
+import { formatTime12Hour } from '@/lib/date-utils';
 
 export default function ChatUI({ leadName = "Sarah Jenkins", leadId }: { leadName?: string; leadId?: string }) {
   const { messages, loading, sending, sendMessage } = useMessages(leadId);

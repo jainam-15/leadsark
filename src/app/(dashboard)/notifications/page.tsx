@@ -2,10 +2,10 @@ import React from "react";
 
 export default function NotificationsPage() {
   const notifications = [
-    { id: 1, title: "New Lead Assigned", message: "Sarah Jenkins from CloudScale Systems was assigned to you.", time: "10 mins ago", read: false, icon: "person_add", color: "text-teal-600 bg-teal-50" },
-    { id: 2, title: "WhatsApp Sync Completed", message: "Successfully synced 42 new messages.", time: "1 hour ago", read: false, icon: "sync", color: "text-blue-600 bg-blue-50" },
-    { id: 3, title: "Overdue Follow-up", message: "Marcus Thorne is overdue for a follow-up.", time: "2 hours ago", read: true, icon: "alarm", color: "text-red-600 bg-red-50" },
-    { id: 4, title: "Payment Received", message: "Subscription renewed successfully.", time: "Yesterday", read: true, icon: "payments", color: "text-emerald-600 bg-emerald-50" },
+    { id: 1, title: "New Lead Assigned", message: "Sarah Jenkins from CloudScale Systems was assigned to you.", time: "Today • 2:30 PM", read: false, icon: "person_add", color: "text-teal-600 bg-teal-50" },
+    { id: 2, title: "WhatsApp Sync Completed", message: "Successfully synced 42 new messages.", time: "Today • 11:45 AM", read: false, icon: "sync", color: "text-blue-600 bg-blue-50" },
+    { id: 3, title: "Overdue Follow-up", message: "Marcus Thorne is overdue for a follow-up.", time: "Yesterday • 4:15 PM", read: true, icon: "alarm", color: "text-red-600 bg-red-50" },
+    { id: 4, title: "Payment Received", message: "Subscription renewed successfully.", time: "May 10 • 9:00 AM", read: true, icon: "payments", color: "text-emerald-600 bg-emerald-50" },
   ];
 
   return (

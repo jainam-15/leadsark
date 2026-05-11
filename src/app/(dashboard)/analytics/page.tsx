@@ -133,11 +133,11 @@ export default function Analytics() {
             {['bg-slate-50', 'bg-slate-50', 'bg-slate-50', 'bg-wa-green/5', 'bg-slate-50', 'bg-slate-50'].map((bg, i) => <div key={`n-${i}`} className={`${bg} rounded`}></div>)}
           </div>
           <div className="flex justify-between mt-6 text-label-xs text-slate-400 font-bold uppercase">
-            <span>08:00</span>
-            <span>12:00</span>
-            <span>16:00</span>
-            <span>20:00</span>
-            <span>00:00</span>
+            <span>8:00 AM</span>
+            <span>12:00 PM</span>
+            <span>4:00 PM</span>
+            <span>8:00 PM</span>
+            <span>12:00 AM</span>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { LeadType, LeadStatus } from '@/app/(dashboard)/leads/page';
 import { useLeads } from '@/hooks/useLeads';
 import { suggestStatus } from '@/lib/scoring';
 import { useFollowups } from '@/hooks/useFollowups';
+import { formatDateTime12Hour, formatTime12Hour } from '@/lib/date-utils';
 
 interface LeadDetailPanelProps {
   lead: LeadType;
@@ -53,7 +54,7 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
               <span className="text-xs uppercase font-bold tracking-tighter">Source: {lead.source || 'WhatsApp'}</span>
             </div>
             {lead.last_message_at && (
-              <p className="text-[10px] text-slate-400 uppercase font-black">Last message: {new Date(lead.last_message_at).toLocaleString()}</p>
+              <p className="text-[10px] text-slate-400 uppercase font-black">Last message: {formatDateTime12Hour(lead.last_message_at)}</p>
             )}
           </div>
 
@@ -137,7 +138,7 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
             <div className="glass-panel p-4 rounded-xl border-wa-green/20 bg-wa-green/5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="material-symbols-outlined text-wa-green text-sm">event</span>
-                <span className="text-[10px] font-black text-slate-500 uppercase">Next: {new Date(nextFollowup.scheduled_at).toLocaleDateString()}</span>
+                <span className="text-[10px] font-black text-slate-500 uppercase">Next: {formatDateTime12Hour(nextFollowup.scheduled_at)}</span>
               </div>
               <h5 className="text-xs font-bold text-slate-900">{nextFollowup.title || "Scheduled Outreach"}</h5>
               <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 italic">"{nextFollowup.message}"</p>
@@ -284,6 +285,7 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
                     <span className="text-[10px] font-bold text-slate-700">{f.title || "Follow-up"}</span>
                     <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${f.status === 'sent' ? 'bg-teal-50 text-teal-600' : 'bg-slate-200 text-slate-500'}`}>{f.status}</span>
                   </div>
+                  <p className="text-[9px] text-slate-400 mb-1">{formatDateTime12Hour(f.sent_at || f.updated_at)}</p>
                   <p className="text-[10px] text-slate-400 italic line-clamp-1">"{f.message}"</p>
                 </div>
               ))}

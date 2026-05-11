@@ -3,6 +3,7 @@
 import { useAdmin } from "@/hooks/useAdmin";
 import Link from "next/link";
 import { getDaysRemaining, getSubscriptionStatusLabel } from "@/lib/subscription-utils";
+import { formatDateTime12Hour } from "@/lib/date-utils";
 
 export default function AdminSubscriptionsPage() {
   const { businesses, loading } = useAdmin();
@@ -54,10 +55,10 @@ export default function AdminSubscriptionsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500">
-                    {new Date(sub.start_date).toLocaleDateString()}
+                    {formatDateTime12Hour(sub.start_date)}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-500">
-                    {new Date(sub.end_date).toLocaleDateString()}
+                    {formatDateTime12Hour(sub.end_date)}
                   </td>
                   <td className="px-6 py-4 text-right font-bold text-slate-700">
                     {days} Days

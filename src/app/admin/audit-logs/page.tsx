@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAdmin } from "@/hooks/useAdmin";
+import { formatDateTime12Hour } from "@/lib/date-utils";
 
 export default function AdminAuditLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -44,7 +45,7 @@ export default function AdminAuditLogsPage() {
             {logs.map((log) => (
               <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
                 <td className="px-6 py-4 text-xs text-slate-500 font-mono">
-                  {new Date(log.created_at).toLocaleString()}
+                  {formatDateTime12Hour(log.created_at)}
                 </td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-[10px] font-black uppercase tracking-wider">
