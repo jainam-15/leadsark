@@ -208,16 +208,24 @@ export async function POST(req: Request) {
       raw_payload: body
     }]);
 
-    // 5. Auto-reply (Enhanced with Templates)
-    if (isNewLead) {
+    // 5. Auto-reply Pipeline (Deep Debug)
+    console.log(`[AutoReply START] Processing for lead: ${leadId}`);
+    try {
       const { data: settings } = await supabaseAdmin
         .from('settings')
-        .select('auto_reply_enabled, greeting_message, greeting_template_id')
+        .select('auto_reply_enabled, auto_reply_mode, greeting_message, greeting_template_id')
         .eq('business_id', businessId)
-        .single();
+        .maybeSingle();
 
-      if (settings?.auto_reply_enabled) {
-        // Fetch secrets to send message
+      console.log(`[AutoReply] DB Settings - Enabled: ${settings?.auto_reply_enabled}, Mode: ${settings?.auto_reply_mode}`);
+      console.log(`[AutoReply] Context - isNewLead: ${isNewLead}, senderPhone: ${senderPhone}`);
+
+      // FORCE REPLY FOR DEBUGGING (Override conditions)
+      const shouldReply = true; 
+      console.log(`[AutoReply] Force override: shouldReply set to TRUE`);
+
+      if (shouldReply) {
+        // Fetch secrets
         const { data: secrets } = await supabaseAdmin
           .from('whatsapp_secrets')
           .select('access_token')
@@ -225,56 +233,81 @@ export async function POST(req: Request) {
           .single();
 
         if (secrets?.access_token) {
-          let greeting = settings.greeting_message || `Hello! Thanks for reaching out to us. How can we help you today?`;
-          let templateToUse = null;
+          console.log(`[AutoReply] Access token found.`);
+          let greeting = settings?.greeting_message || `Hello! Thanks for reaching out to us. How can we help you today?`;
+          let templateUsed = "None (Custom Text)";
 
-          // 1. Check if a specific template is selected in settings
-          if (settings.greeting_template_id) {
+          // Template Resolution
+          let templateToUse = null;
+          if (settings?.greeting_template_id) {
+            console.log(`[AutoReply] Attempting to load template: ${settings.greeting_template_id}`);
             const { data: selectedTemplate } = await supabaseAdmin
               .from('message_templates')
-              .select('content')
+              .select('name, content')
               .eq('id', settings.greeting_template_id)
               .maybeSingle();
             templateToUse = selectedTemplate;
           }
 
-          // 2. Fallback to default greeting template if no specific one selected
-          if (!templateToUse) {
-            const { data: defaultTemplate } = await supabaseAdmin
-              .from('message_templates')
-              .select('content')
-              .eq('business_id', businessId)
-              .eq('category', 'greeting')
-              .eq('is_default', true)
-              .eq('is_active', true)
-              .maybeSingle();
-            templateToUse = defaultTemplate;
-          }
-          
           if (templateToUse) {
-            greeting = templateToUse.content.replace(/{{lead_name}}/g, senderName || "there");
+            greeting = templateToUse.content;
+            templateUsed = templateToUse.name;
+            console.log(`[AutoReply] Template loaded: ${templateUsed}`);
           }
 
+          // Variable Resolution
+          const { data: businessData } = await supabaseAdmin.from('businesses').select('name').eq('id', businessId).single();
+          const businessName = businessData?.name || "our team";
+          
+          greeting = greeting
+            .replace(/{{lead_name}}/g, senderName || "there")
+            .replace(/{{business_name}}/g, businessName);
+
+          console.log(`[AutoReply] Final Message Content: "${greeting.substring(0, 50)}..."`);
+
+          // Recipient Formatting
+          const sanitizedTo = senderPhone.replace(/\D/g, '');
+          console.log(`[AutoReply] Calling sendWhatsAppMessage to: ${sanitizedTo}`);
+
+          // EXECUTE SEND
           const result = await sendWhatsAppMessage({
             accessToken: secrets.access_token,
             phoneNumberId: phoneNumberId,
-            to: senderPhone,
+            to: sanitizedTo,
             message: greeting
           });
 
           if (result.success) {
-            // Log outgoing message
+            console.log(`[AutoReply] META SUCCESS. Message ID: ${result.messageId}`);
+            const { error: insErr } = await supabaseAdmin.from('messages').insert([{
+              business_id: businessId,
+              lead_id: leadId,
+              direction: 'outgoing',
+              content: greeting,
+              whatsapp_message_id: result.messageId,
+              status: 'sent'
+            }]);
+            if (insErr) console.error(`[AutoReply] DB INSERT ERROR:`, insErr);
+            else console.log(`[AutoReply] DB INSERT SUCCESS.`);
+          } else {
+            console.error(`[AutoReply] META FAILED. Error: ${result.error}`, result.code ? `Code: ${result.code}` : '');
             await supabaseAdmin.from('messages').insert([{
               business_id: businessId,
               lead_id: leadId,
               direction: 'outgoing',
               content: greeting,
-              whatsapp_message_id: result.messageId
+              status: 'failed',
+              failure_reason: JSON.stringify({ error: result.error, code: result.code })
             }]);
           }
+        } else {
+          console.error(`[AutoReply] CRITICAL: No access_token for business ${businessId}`);
         }
       }
+    } catch (arErr: any) {
+      console.error(`[AutoReply ERROR] Fatal in pipeline:`, arErr);
     }
+    console.log(`[AutoReply END]`);
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
