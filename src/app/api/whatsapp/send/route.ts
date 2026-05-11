@@ -86,15 +86,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "WhatsApp credentials missing" }, { status: 400 });
     }
 
+    // 5.5 Sanitize Phone Number (Digits only, no +, no spaces)
+    const sanitizedPhone = lead.whatsapp_phone!.replace(/\D/g, '');
+    console.log(`[WhatsApp Send] Recipient: ${lead.whatsapp_phone} -> Sanitized: ${sanitizedPhone}`);
+
     // 6. Send WhatsApp message via Meta API
     const result = await sendWhatsAppMessage({
       accessToken: secrets.access_token,
       phoneNumberId: connection.phone_number_id!,
-      to: lead.whatsapp_phone!,
+      to: sanitizedPhone,
       message: message
     });
 
     if (!result.success) {
+      console.error(`[WhatsApp Send] Failed to send to ${sanitizedPhone}:`, result.error);
       return NextResponse.json({ error: result.error || "Failed to send message" }, { status: 500 });
     }
 

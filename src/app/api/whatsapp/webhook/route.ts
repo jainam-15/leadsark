@@ -69,12 +69,33 @@ export async function POST(req: Request) {
     console.log(`[WhatsApp Webhook] Full payload path used: body.entry[0].changes[0].value.metadata.phone_number_id`);
     console.log(`[WhatsApp Webhook] Available metadata:`, JSON.stringify(metadata || {}, null, 2));
 
-    if (isStatusUpdate || !text) {
-      if (isStatusUpdate) {
-        console.log(`[WhatsApp Webhook] Received status update for message: ${body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0]?.id}`);
-      } else {
-        console.log("[WhatsApp Webhook] Ignored (no message body)");
+    // 1.5 Handle Status Updates (sent, delivered, read, failed)
+    if (isStatusUpdate) {
+      const statusObj = body?.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
+      if (statusObj) {
+        const { id: wamid, status, recipient_id, errors } = statusObj;
+        console.log(`[WhatsApp Status Update] ID: ${wamid}, Status: ${status}, Recipient: ${recipient_id}`);
+        
+        const updateData: any = { status };
+        if (errors && errors.length > 0) {
+          updateData.failure_reason = JSON.stringify(errors[0]);
+          console.error(`[WhatsApp Status Error] Message ${wamid} failed:`, errors[0]);
+        }
+
+        const { error: updateError } = await supabaseAdmin
+          .from('messages')
+          .update(updateData)
+          .eq('whatsapp_message_id', wamid);
+
+        if (updateError) {
+          console.error(`[WhatsApp Status DB Error] Failed to update message ${wamid}:`, updateError);
+        }
       }
+      return NextResponse.json({ status: "status_updated" });
+    }
+
+    if (!text) {
+      console.log("[WhatsApp Webhook] Ignored (no message body and not a status update)");
       return NextResponse.json({ status: "ignored" });
     }
 
