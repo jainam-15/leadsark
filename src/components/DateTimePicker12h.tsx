@@ -30,12 +30,18 @@ export function DateTimePicker12h({ value, onChange, className }: DateTimePicker
   }, [value]);
 
   const updateParent = (newDate: string, newHour: string, newMinute: string, newAmpm: string) => {
+    if (!newDate) return;
+    
     let h = parseInt(newHour);
     if (newAmpm === "PM" && h < 12) h += 12;
     if (newAmpm === "AM" && h === 12) h = 0;
     
-    const isoString = `${newDate}T${h.toString().padStart(2, '0')}:${newMinute.padStart(2, '0')}`;
-    onChange(isoString);
+    // Create a local date object
+    const [year, month, day] = newDate.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day, h, parseInt(newMinute));
+    
+    // Pass the full ISO string (UTC) to the parent
+    onChange(localDate.toISOString());
   };
 
   return (

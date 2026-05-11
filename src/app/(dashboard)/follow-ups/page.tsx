@@ -16,7 +16,7 @@ export default function FollowUpsPage() {
     lead_id: "",
     title: "",
     message: "",
-    scheduled_at: new Date().toISOString().slice(0, 16),
+    scheduled_at: new Date().toISOString(),
     send_mode: "manual"
   });
 
@@ -54,7 +54,7 @@ export default function FollowUpsPage() {
         lead_id: "",
         title: "",
         message: "",
-        scheduled_at: new Date().toISOString().slice(0, 16),
+        scheduled_at: new Date().toISOString(),
         send_mode: "manual"
       });
     } else {
@@ -230,6 +230,11 @@ export default function FollowUpsPage() {
                     <option value="manual">Manual (I will send)</option>
                     <option value="automatic">Automatic (System sends)</option>
                   </select>
+                  {newFollowup.send_mode === 'automatic' && (
+                    <p className="text-[9px] text-amber-600 mt-1 italic font-medium">
+                      * Automatic sending requires system-side Cron configuration.
+                    </p>
+                  )}
                 </div>
               </div>
 
