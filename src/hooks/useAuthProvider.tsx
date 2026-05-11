@@ -64,10 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return;
     
     try {
-      console.log(`[Auth] Fetching profile for: ${u.id}`);
+      console.log(`[Auth] Fetching profile for UID: ${u.id}`);
       const { data, error: profileError } = await supabase
         .from('profiles')
-        .select('*, businesses(name)')
+        .select('*, businesses!profiles_business_id_fkey(id, name)')
         .eq('id', u.id)
         .maybeSingle();
       
@@ -76,20 +76,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw profileError;
       }
 
+      console.log("[Auth] Raw profile data from DB:", data);
+
       if (data) {
         const authProfile: AuthProfile = {
           id: data.id,
           email: data.email,
           full_name: data.full_name,
-          business_id: data.business_id,
+          business_id: data.business_id, // This is the UUID
           business_name: (data.businesses as any)?.name || '',
           role: data.role || 'user',
           email_confirmed: !!u.email_confirmed_at
         };
+        
+        console.log(`[Auth] Profile loaded:`, {
+          uid: u.id,
+          profile_id: authProfile.id,
+          business_id: authProfile.business_id,
+          role: authProfile.role
+        });
+        
         setProfile(authProfile);
         setRole(authProfile.role);
       } else {
-        console.warn("[Auth] No profile found, triggering idempotent setup...");
+        console.warn("[Auth] No profile record found for user. Triggering onboarding setup...");
         const setupResult = await ensureUserBusinessSetupAction(
           u.id,
           u.email || '',
@@ -98,14 +108,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         
         if (setupResult.success) {
-          console.log("[Auth] Setup successful, refetching...");
-          // Refetch without recursion (call the same logic or just fetch again)
-          const { data: newData } = await supabase
+          console.log("[Auth] Onboarding successful, refetching profile...");
+          // Fetch again to get the newly created profile/business
+          const { data: newData, error: fetchErr } = await supabase
             .from('profiles')
-            .select('*, businesses(name)')
+            .select('*, businesses!profiles_business_id_fkey(id, name)')
             .eq('id', u.id)
             .single();
           
+          if (fetchErr) throw fetchErr;
+
           if (newData) {
             const authProfile: AuthProfile = {
               id: newData.id,
@@ -116,17 +128,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: newData.role || 'user',
               email_confirmed: !!u.email_confirmed_at
             };
+            console.log("[Auth] Refetched profile after setup:", authProfile);
             setProfile(authProfile);
             setRole(authProfile.role);
           }
         } else {
-          console.error("[Auth] Setup failed:", setupResult.error);
+          console.error("[Auth] Onboarding failed:", setupResult.error);
           setProfile(null);
           setRole(null);
         }
       }
     } catch (err: any) {
-      console.error("[Auth] Profile fetch exception:", JSON.stringify(err, null, 2));
+      console.error("[Auth] Profile fetch exception:", err);
       setError(err.message || "An unexpected error occurred during profile fetch.");
     } finally {
       setLoading(false);
