@@ -76,6 +76,7 @@ export function useLeads() {
             phone: dbLead.phone || dbLead.whatsapp_phone,
             source: dbLead.source,
             last_message_at: dbLead.last_message_at,
+            last_incoming_at: dbLead.last_incoming_at,
             is_blocked: dbLead.is_blocked,
             is_personal: dbLead.is_personal,
             automation_paused: dbLead.automation_paused,

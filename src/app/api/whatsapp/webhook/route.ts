@@ -165,7 +165,8 @@ export async function POST(req: Request) {
           phone: senderPhone,
           source: 'WhatsApp',
           status: 'Cold',
-          last_message_at: new Date().toISOString()
+          last_message_at: new Date().toISOString(),
+          last_incoming_at: new Date().toISOString()
         }])
         .select()
         .single();
@@ -180,6 +181,7 @@ export async function POST(req: Request) {
         .from('leads')
         .update({ 
           last_message_at: new Date().toISOString(),
+          last_incoming_at: new Date().toISOString(),
           status: existingLead.status === 'Lost' ? 'Cold' : existingLead.status // Re-activate lost leads if they message back
         })
         .eq('id', leadId);

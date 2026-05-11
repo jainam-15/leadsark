@@ -100,10 +100,29 @@ export async function POST(req: Request) {
 
     if (!result.success) {
       console.error(`[WhatsApp Send] Failed to send to ${sanitizedPhone}:`, result.error);
-      return NextResponse.json({ error: result.error || "Failed to send message" }, { status: 500 });
+      
+      const isOutsideWindow = result.code === 131047;
+      const errorMsg = isOutsideWindow 
+        ? "Customer has not replied in the last 24 hours. Use a template message."
+        : result.error || "Failed to send message";
+
+      // Mark as failed in DB
+      await supabaseAdmin.from('messages').insert([{
+        business_id: businessId,
+        lead_id: lead.id,
+        direction: 'outgoing',
+        content: message,
+        status: 'failed',
+        failure_reason: JSON.stringify({ code: result.code, message: result.error })
+      }]);
+
+      return NextResponse.json({ 
+        error: errorMsg,
+        code: result.code 
+      }, { status: isOutsideWindow ? 403 : 500 });
     }
 
-    // 7. Store Outgoing Message
+    // 7. Store Successful Outgoing Message
     const { data: newMessage, error: msgError } = await supabaseAdmin
       .from('messages')
       .insert([{
@@ -118,6 +137,8 @@ export async function POST(req: Request) {
       .single();
 
     if (msgError) throw msgError;
+
+    return NextResponse.json({ success: true, message: newMessage });
 
     // 8. Update lead's last_message_at
     await supabaseAdmin

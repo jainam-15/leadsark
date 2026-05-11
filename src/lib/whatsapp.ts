@@ -39,7 +39,11 @@ export async function sendWhatsAppMessage({
 
     if (!response.ok) {
       console.error("[WhatsApp SDK] Send failed:", data);
-      return { success: false, error: data.error?.message || "Failed to send message" };
+      return { 
+        success: false, 
+        error: data.error?.message || "Failed to send message",
+        code: data.error?.code 
+      };
     }
 
     return { success: true, messageId: data.messages?.[0]?.id };
@@ -94,4 +98,15 @@ export function parseWhatsAppPayload(body: any) {
     console.error("[WhatsApp SDK] Parse error:", err);
     return null;
   }
+}
+
+/**
+ * Checks if a free-form message can be sent (within 24h window)
+ */
+export function canSendFreeformMessage(lastIncomingAt: string | null) {
+  if (!lastIncomingAt) return false;
+  const lastIncoming = new Date(lastIncomingAt).getTime();
+  const now = new Date().getTime();
+  const twentyFourHours = 24 * 60 * 60 * 1000;
+  return (now - lastIncoming) < twentyFourHours;
 }
