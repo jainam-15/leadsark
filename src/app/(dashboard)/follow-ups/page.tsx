@@ -1,6 +1,7 @@
 "use client";
 
 import { useFollowups, Followup } from "@/hooks/useFollowups";
+import { useLeads } from "@/hooks/useLeads";
 import { useState } from "react";
 
 export default function FollowUpsPage() {
