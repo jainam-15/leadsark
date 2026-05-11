@@ -4,8 +4,18 @@ import { useFollowups, Followup } from "@/hooks/useFollowups";
 import { useState } from "react";
 
 export default function FollowUpsPage() {
-  const { followUps, loading, updateFollowup, deleteFollowup, sendNow, toggleComplete } = useFollowups();
+  const { followUps, loading, scheduleFollowup, updateFollowup, deleteFollowup, sendNow, toggleComplete } = useFollowups();
+  const { leads } = useLeads();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newFollowup, setNewFollowup] = useState<Partial<Followup>>({
+    lead_id: "",
+    title: "",
+    message: "",
+    scheduled_at: new Date().toISOString().slice(0, 16),
+    send_mode: "manual"
+  });
 
   const filtered = followUps.filter(f => 
     (f.lead?.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -24,6 +34,31 @@ export default function FollowUpsPage() {
     }
   };
 
+  const handleCreateFollowup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFollowup.lead_id || !newFollowup.title) {
+      alert("Lead and Title are required");
+      return;
+    }
+    
+    setIsSaving(true);
+    const res = await scheduleFollowup(newFollowup);
+    setIsSaving(false);
+    
+    if (res.success) {
+      setIsModalOpen(false);
+      setNewFollowup({
+        lead_id: "",
+        title: "",
+        message: "",
+        scheduled_at: new Date().toISOString().slice(0, 16),
+        send_mode: "manual"
+      });
+    } else {
+      alert("Error: " + res.error);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-500">Loading follow-ups...</div>;
   }
@@ -34,6 +69,14 @@ export default function FollowUpsPage() {
         <div>
           <h1 className="font-h2 text-h2 text-slate-900 tracking-tight">Follow-up Dashboard</h1>
           <p className="text-body-md text-slate-500 mt-1">Manage your relationship building tasks.</p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 md:flex-none px-6 py-2.5 bg-slate-900 text-white rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-sm flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span> Create Follow-up
+          </button>
         </div>
         <div className="relative w-full md:w-64">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
@@ -116,6 +159,104 @@ export default function FollowUpsPage() {
           </div>
         </div>
       </div>
+
+      {/* Create Follow-up Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h2 className="font-bold text-slate-900">New Follow-up Task</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateFollowup} className="p-6 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Select Lead</label>
+                <select 
+                  required
+                  value={newFollowup.lead_id}
+                  onChange={e => setNewFollowup({...newFollowup, lead_id: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium"
+                >
+                  <option value="">Choose a lead...</option>
+                  {leads.map(lead => (
+                    <option key={lead.id} value={lead.id}>{lead.name} ({lead.company})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Task Title</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. Call to discuss pricing"
+                  value={newFollowup.title}
+                  onChange={e => setNewFollowup({...newFollowup, title: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Follow-up Message</label>
+                <textarea 
+                  placeholder="What needs to be discussed? (Used for automatic send)"
+                  value={newFollowup.message}
+                  onChange={e => setNewFollowup({...newFollowup, message: e.target.value})}
+                  className="w-full h-24 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Schedule For</label>
+                  <input 
+                    type="datetime-local" 
+                    required
+                    value={newFollowup.scheduled_at}
+                    onChange={e => setNewFollowup({...newFollowup, scheduled_at: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Send Mode</label>
+                  <select 
+                    value={newFollowup.send_mode}
+                    onChange={e => setNewFollowup({...newFollowup, send_mode: e.target.value as any})}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm font-medium"
+                  >
+                    <option value="manual">Manual (I will send)</option>
+                    <option value="automatic">Automatic (System sends)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-2.5 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSaving}
+                  className="flex-[2] py-2.5 bg-slate-900 text-white rounded-xl shadow-md hover:shadow-lg transition-all font-bold text-sm flex items-center justify-center gap-2"
+                >
+                  {isSaving ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>Save Follow-up</>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
