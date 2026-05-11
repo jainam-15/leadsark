@@ -11,7 +11,12 @@ export default function FollowUpsPage() {
   const { leads } = useLeads();
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
+  const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [newFollowup, setNewFollowup] = useState<Partial<Followup>>({
     lead_id: "",
     title: "",
@@ -30,10 +35,63 @@ export default function FollowUpsPage() {
   const upcoming = filtered.filter(f => !f.isOverdue && f.status === 'pending');
   const completed = filtered.filter(f => ['sent', 'completed', 'skipped', 'failed'].includes(f.status));
 
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleSendNow = async (id: string) => {
+    setActionLoading(id);
     const res = await sendNow(id);
-    if (!res.success) {
-      alert(res.error || "Failed to send follow-up");
+    setActionLoading(null);
+    if (res.success) {
+      showToast("Follow-up sent successfully!");
+    } else {
+      showToast(res.error || "Failed to send", "error");
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: any) => {
+    setActionLoading(id);
+    const res = await updateFollowup(id, { status, updated_at: new Date().toISOString() });
+    setActionLoading(null);
+    if (res.success) {
+      showToast(`Follow-up ${status === 'skipped' ? 'skipped' : 'updated'}`);
+    } else {
+      showToast(res.error || "Update failed", "error");
+    }
+  };
+
+  const handleComplete = async (id: string) => {
+    setActionLoading(id);
+    const res = await toggleComplete(id, false);
+    setActionLoading(null);
+    if (res.success) {
+      showToast("Follow-up marked as completed");
+    } else {
+      showToast(res.error || "Update failed", "error");
+    }
+  };
+
+  const openReschedule = (id: string, date: string) => {
+    setReschedulingId(id);
+    setRescheduleDate(date);
+    setIsRescheduleOpen(true);
+  };
+
+  const handleReschedule = async () => {
+    if (!reschedulingId || !rescheduleDate) return;
+    setIsSaving(true);
+    const res = await updateFollowup(reschedulingId, { 
+      scheduled_at: rescheduleDate,
+      updated_at: new Date().toISOString()
+    });
+    setIsSaving(false);
+    if (res.success) {
+      setIsRescheduleOpen(false);
+      showToast("Follow-up rescheduled");
+    } else {
+      showToast(res.error || "Reschedule failed", "error");
     }
   };
 
@@ -103,7 +161,16 @@ export default function FollowUpsPage() {
           </div>
           <div className="space-y-3">
             {overdue.map(f => (
-              <FollowupCard key={f.id} followup={f} onSend={() => handleSendNow(f.id)} onSkip={() => updateFollowup(f.id, { status: 'skipped' })} onComplete={() => toggleComplete(f.id, false)} isOverdue />
+              <FollowupCard 
+                key={f.id} 
+                followup={f} 
+                onSend={() => handleSendNow(f.id)} 
+                onSkip={() => handleUpdateStatus(f.id, 'skipped')} 
+                onComplete={() => handleComplete(f.id)} 
+                onReschedule={() => openReschedule(f.id, f.scheduled_at)}
+                isLoading={actionLoading === f.id}
+                isOverdue 
+              />
             ))}
             {overdue.length === 0 && (
               <div className="p-8 border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 text-sm">Everything caught up!</div>
@@ -120,7 +187,15 @@ export default function FollowUpsPage() {
           </div>
           <div className="space-y-3">
             {upcoming.map(f => (
-              <FollowupCard key={f.id} followup={f} onSend={() => handleSendNow(f.id)} onSkip={() => updateFollowup(f.id, { status: 'skipped' })} onComplete={() => toggleComplete(f.id, false)} />
+              <FollowupCard 
+                key={f.id} 
+                followup={f} 
+                onSend={() => handleSendNow(f.id)} 
+                onSkip={() => handleUpdateStatus(f.id, 'skipped')} 
+                onComplete={() => handleComplete(f.id)} 
+                onReschedule={() => openReschedule(f.id, f.scheduled_at)}
+                isLoading={actionLoading === f.id}
+              />
             ))}
             {upcoming.length === 0 && (
               <div className="p-8 border border-dashed border-slate-200 rounded-2xl text-center text-slate-400 text-sm">No upcoming tasks.</div>
@@ -262,28 +337,114 @@ export default function FollowUpsPage() {
           </div>
         </div>
       )}
+      {/* Reschedule Modal */}
+      {isRescheduleOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col">
+            <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Reschedule</h2>
+              <button onClick={() => setIsRescheduleOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400">
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">New Date & Time</label>
+                <DateTimePicker12h 
+                  value={rescheduleDate}
+                  onChange={setRescheduleDate}
+                />
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setIsRescheduleOpen(false)}
+                  className="flex-1 py-3 text-slate-500 font-bold text-sm hover:bg-slate-50 rounded-2xl"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleReschedule}
+                  disabled={isSaving}
+                  className="flex-[2] py-3 bg-slate-900 text-white rounded-2xl shadow-lg hover:shadow-xl font-bold text-sm flex items-center justify-center gap-2"
+                >
+                  {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : "Update Schedule"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300 ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white'}`}>
+          <span className="material-symbols-outlined text-xl">
+            {toast.type === 'error' ? 'error' : 'check_circle'}
+          </span>
+          <span className="text-sm font-bold">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }
 
-function FollowupCard({ followup, onSend, onSkip, onComplete, isOverdue }: { 
+function FollowupCard({ followup, onSend, onSkip, onComplete, onReschedule, isOverdue, isLoading }: { 
   followup: Followup; 
   onSend: () => void; 
   onSkip: () => void; 
   onComplete: () => void;
+  onReschedule: () => void;
   isOverdue?: boolean;
+  isLoading?: boolean;
 }) {
+  const [showMenu, setShowMenu] = useState(false);
+
   return (
-    <div className={`glass-panel p-5 rounded-2xl border-l-4 transition-all hover:-translate-y-1 ${isOverdue ? 'border-error' : 'border-amber-400'}`}>
+    <div className={`glass-panel p-5 rounded-2xl border-l-4 transition-all hover:-translate-y-1 relative ${isOverdue ? 'border-error' : 'border-amber-400'}`}>
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-20 flex items-center justify-center rounded-2xl">
+          <div className="w-6 h-6 border-2 border-slate-900/10 border-t-slate-900 rounded-full animate-spin"></div>
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-bold text-slate-900 leading-tight">{followup.lead?.name || "Unknown Lead"}</h3>
           <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">{followup.lead?.company || "No Company"}</p>
         </div>
-        <div className="text-right">
-          <p className={`text-[10px] font-black uppercase ${isOverdue ? 'text-error' : 'text-slate-500'}`}>
-            {formatDateTime12Hour(followup.scheduled_at)}
-          </p>
+        <div className="flex items-center gap-2">
+          <div className="text-right">
+            <p className={`text-[10px] font-black uppercase ${isOverdue ? 'text-error' : 'text-slate-500'}`}>
+              {formatDateTime12Hour(followup.scheduled_at)}
+            </p>
+          </div>
+          <div className="relative">
+            <button 
+              onClick={() => setShowMenu(!showMenu)}
+              className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 lg:hidden"
+            >
+              <span className="material-symbols-outlined">more_vert</span>
+            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-30 lg:hidden" onClick={() => setShowMenu(false)}></div>
+                <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-2xl border border-slate-100 z-40 lg:hidden py-1">
+                   <button onClick={() => { onSend(); setShowMenu(false); }} className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">send</span> Send Now
+                   </button>
+                   <button onClick={() => { onReschedule(); setShowMenu(false); }} className="w-full text-left px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">event</span> Reschedule
+                   </button>
+                   <button onClick={() => { onComplete(); setShowMenu(false); }} className="w-full text-left px-4 py-2 text-xs font-bold text-teal-600 hover:bg-slate-50 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">check_circle</span> Mark Done
+                   </button>
+                   <button onClick={() => { onSkip(); setShowMenu(false); }} className="w-full text-left px-4 py-2 text-xs font-bold text-error hover:bg-slate-50 flex items-center gap-2 border-t border-slate-50 mt-1">
+                      <span className="material-symbols-outlined text-sm">block</span> Skip/Cancel
+                   </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -298,7 +459,7 @@ function FollowupCard({ followup, onSend, onSkip, onComplete, isOverdue }: {
         )}
       </div>
 
-      <div className="flex gap-2">
+      <div className="hidden lg:flex gap-2">
         <button 
           onClick={onSend}
           className="flex-1 py-2 bg-wa-green text-white rounded-xl text-[10px] font-black uppercase shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5"
@@ -306,16 +467,23 @@ function FollowupCard({ followup, onSend, onSkip, onComplete, isOverdue }: {
           <span className="material-symbols-outlined text-sm">send</span> Send Now
         </button>
         <button 
+          onClick={onReschedule}
+          className="p-2 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-slate-900 hover:border-slate-300 transition-all flex items-center justify-center"
+          title="Reschedule"
+        >
+          <span className="material-symbols-outlined text-lg">event</span>
+        </button>
+        <button 
           onClick={onComplete}
           className="p-2 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-teal-600 hover:border-teal-200 transition-all flex items-center justify-center"
-          title="Mark Completed"
+          title="Mark Done"
         >
           <span className="material-symbols-outlined text-lg">check_circle</span>
         </button>
         <button 
           onClick={onSkip}
           className="p-2 bg-white border border-slate-200 text-slate-400 rounded-xl hover:text-error hover:border-red-200 transition-all flex items-center justify-center"
-          title="Skip"
+          title="Skip/Cancel"
         >
           <span className="material-symbols-outlined text-lg">block</span>
         </button>
