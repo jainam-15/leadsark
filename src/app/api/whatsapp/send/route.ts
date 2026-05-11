@@ -138,8 +138,6 @@ export async function POST(req: Request) {
 
     if (msgError) throw msgError;
 
-    return NextResponse.json({ success: true, message: newMessage });
-
     // 8. Update lead's last_message_at
     await supabaseAdmin
       .from('leads')

@@ -18,6 +18,7 @@ export interface LeadType {
   phone?: string;
   source?: string;
   last_message_at?: string;
+  last_incoming_at?: string;
   unreadCount?: number;
   active?: boolean;
   overdue?: boolean;

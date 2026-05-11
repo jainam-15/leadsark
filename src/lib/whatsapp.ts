@@ -103,7 +103,7 @@ export function parseWhatsAppPayload(body: any) {
 /**
  * Checks if a free-form message can be sent (within 24h window)
  */
-export function canSendFreeformMessage(lastIncomingAt: string | null) {
+export function canSendFreeformMessage(lastIncomingAt: string | null | undefined) {
   if (!lastIncomingAt) return false;
   const lastIncoming = new Date(lastIncomingAt).getTime();
   const now = new Date().getTime();
