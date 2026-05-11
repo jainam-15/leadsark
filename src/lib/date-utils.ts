@@ -2,18 +2,23 @@
  * Central utility for date and time formatting
  */
 
+function constructManual12Hour(d: Date): string {
+  let hours = d.getHours();
+  const minutes = d.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+  return `${hours}:${minutesStr} ${ampm}`;
+}
+
 /**
  * Formats a date string or object into 12-hour time format (e.g., 2:30 PM)
  */
 export function formatTime12Hour(date: string | Date | null | undefined): string {
   if (!date) return '';
   const d = typeof date === 'string' ? new Date(date) : date;
-  
-  return d.toLocaleTimeString([], { 
-    hour: 'numeric', 
-    minute: '2-digit', 
-    hour12: true 
-  });
+  return constructManual12Hour(d);
 }
 
 /**
@@ -29,11 +34,7 @@ export function formatDateTime12Hour(date: string | Date | null | undefined): st
     year: 'numeric'
   });
   
-  const timeStr = d.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  const timeStr = constructManual12Hour(d);
   
   return `${dateStr} • ${timeStr}`;
 }
@@ -50,11 +51,7 @@ export function formatShortDateTime(date: string | Date | null | undefined): str
     day: 'numeric'
   });
   
-  const timeStr = d.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  const timeStr = constructManual12Hour(d);
   
   return `${dateStr} • ${timeStr}`;
 }
@@ -68,11 +65,7 @@ export function formatRelativeTime(date: string | Date | null | undefined): stri
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - d.getTime()) / 1000);
   
-  const timeStr = d.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
+  const timeStr = constructManual12Hour(d);
 
   if (diffInSeconds < 60) return `Just now • ${timeStr}`;
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago • ${timeStr}`;

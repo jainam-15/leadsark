@@ -4,6 +4,7 @@ import { useLeads } from '@/hooks/useLeads';
 import { suggestStatus } from '@/lib/scoring';
 import { useFollowups } from '@/hooks/useFollowups';
 import { formatDateTime12Hour, formatTime12Hour } from '@/lib/date-utils';
+import { DateTimePicker12h } from './DateTimePicker12h';
 
 interface LeadDetailPanelProps {
   lead: LeadType;
@@ -163,11 +164,10 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
 
               <div className="space-y-1">
                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Date & Time</label>
-                <input 
-                  type="datetime-local" 
+                <DateTimePicker12h 
                   value={followupDate}
-                  onChange={e => setFollowupDate(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-slate-900/10"
+                  onChange={setFollowupDate}
+                  className="mt-1"
                 />
                 <div className="flex flex-wrap gap-1 mt-2">
                    {[

@@ -4,6 +4,7 @@ import { useFollowups, Followup } from "@/hooks/useFollowups";
 import { useLeads } from "@/hooks/useLeads";
 import { useState } from "react";
 import { formatDateTime12Hour, formatTime12Hour } from "@/lib/date-utils";
+import { DateTimePicker12h } from "@/components/DateTimePicker12h";
 
 export default function FollowUpsPage() {
   const { followUps, loading, scheduleFollowup, updateFollowup, deleteFollowup, sendNow, toggleComplete } = useFollowups();
@@ -214,12 +215,9 @@ export default function FollowUpsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Schedule For</label>
-                  <input 
-                    type="datetime-local" 
-                    required
-                    value={newFollowup.scheduled_at}
-                    onChange={e => setNewFollowup({...newFollowup, scheduled_at: e.target.value})}
-                    className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-wa-green/20 text-sm transition-all"
+                  <DateTimePicker12h 
+                    value={newFollowup.scheduled_at || ""}
+                    onChange={val => setNewFollowup({...newFollowup, scheduled_at: val})}
                   />
                 </div>
                 <div>
