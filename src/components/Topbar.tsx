@@ -1,9 +1,12 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
+import Link from "next/link";
 
 export default function Topbar() {
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
 
   return (
     <header className="fixed top-0 right-0 left-64 h-16 bg-white/70 backdrop-blur-md border-b border-slate-200/20 z-40 flex justify-between items-center px-6 shadow-[0_10px_30px_-5px_rgba(55,48,163,0.08)]">
@@ -17,12 +20,16 @@ export default function Topbar() {
       </div>
       
       <div className="flex items-center gap-6">
-        <button className="relative text-slate-500 hover:text-wa-green transition-colors">
+        <Link href="/notifications" className="relative text-slate-500 hover:text-primary transition-colors">
           <span className="material-symbols-outlined">notifications</span>
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
-        </button>
-        <button className="text-slate-500 hover:text-wa-green transition-colors">
-          <span className="material-symbols-outlined">mail</span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
+        <button className="text-slate-500 hover:text-primary transition-colors">
+          <span className="material-symbols-outlined">help</span>
         </button>
         
         <div className="h-8 w-[1px] bg-slate-200"></div>

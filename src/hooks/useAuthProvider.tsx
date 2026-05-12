@@ -13,6 +13,7 @@ interface AuthProfile {
   business_id?: string;
   business_name?: string;
   role: 'admin' | 'user';
+  business_role?: 'owner' | 'admin' | 'agent';
   email_confirmed: boolean;
 }
 
@@ -67,7 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(`[Auth] Fetching profile for UID: ${u.id}`);
       const { data, error: profileError } = await supabase
         .from('profiles')
-        .select('*, businesses!profiles_business_id_fkey(id, name)')
+        .select(`
+          *,
+          businesses!profiles_business_id_fkey(id, name),
+          team_members(role)
+        `)
         .eq('id', u.id)
         .maybeSingle();
       
@@ -86,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           business_id: data.business_id, // This is the UUID
           business_name: (data.businesses as any)?.name || '',
           role: data.role || 'user',
+          business_role: (data.team_members as any)?.[0]?.role,
           email_confirmed: !!u.email_confirmed_at
         };
         
@@ -112,7 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Fetch again to get the newly created profile/business
           const { data: newData, error: fetchErr } = await supabase
             .from('profiles')
-            .select('*, businesses!profiles_business_id_fkey(id, name)')
+            .select(`
+              *,
+              businesses!profiles_business_id_fkey(id, name),
+              team_members(role)
+            `)
             .eq('id', u.id)
             .single();
           
@@ -126,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               business_id: newData.business_id,
               business_name: (newData.businesses as any)?.name || '',
               role: newData.role || 'user',
+              business_role: (newData.team_members as any)?.[0]?.role,
               email_confirmed: !!u.email_confirmed_at
             };
             console.log("[Auth] Refetched profile after setup:", authProfile);

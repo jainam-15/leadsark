@@ -5,6 +5,9 @@ import { suggestStatus } from '@/lib/scoring';
 import { useFollowups } from '@/hooks/useFollowups';
 import { formatDateTime12Hour, formatTime12Hour } from '@/lib/date-utils';
 import { DateTimePicker12h } from './DateTimePicker12h';
+import { useTeam } from '@/hooks/useTeam';
+import LeadNotes from './LeadNotes';
+import LeadTimeline from './LeadTimeline';
 
 interface LeadDetailPanelProps {
   lead: LeadType;
@@ -12,9 +15,11 @@ interface LeadDetailPanelProps {
 }
 
 export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPanelProps) {
-  const { toggleLeadField, updateLeadStatus } = useLeads();
+  const { toggleLeadField, updateLeadStatus, assignLead } = useLeads();
   const { scheduleFollowup, followUps } = useFollowups();
+  const { members } = useTeam();
   const [followupDate, setFollowupDate] = useState("");
+  const [activeTab, setActiveTab] = useState<'info' | 'timeline' | 'notes'>('info');
   
   const suggested = suggestStatus(lead.lead_score || 0);
   const showSuggestion = !lead.is_manual_status && lead.status !== suggested;
@@ -25,8 +30,27 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
 
   return (
     <section className="w-[25%] border-l border-slate-200/30 flex flex-col h-full bg-surface-container-low overflow-hidden">
+      {/* Tabs Header */}
+      <div className="flex border-b border-slate-200 bg-white">
+        {(['info', 'timeline', 'notes'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeTab === tab 
+                ? 'text-primary border-b-2 border-primary bg-primary/5' 
+                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-        {/* Profile Header */}
+        {activeTab === 'info' && (
+          <div className="space-y-8">
+            {/* Profile Header (Moved inside info tab content) */}
         <div className="text-center">
           <div className="relative inline-block">
             <div className="w-28 h-28 rounded-full border-4 border-white shadow-xl mb-4 bg-slate-200 flex items-center justify-center overflow-hidden">
@@ -57,6 +81,23 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
             {lead.last_message_at && (
               <p className="text-[10px] text-slate-400 uppercase font-black">Last message: {formatDateTime12Hour(lead.last_message_at)}</p>
             )}
+          </div>
+
+          {/* Lead Assignment */}
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2 w-full px-4">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Assigned To</span>
+              <select 
+                value={lead.assigned_to || ""}
+                onChange={(e) => assignLead(lead.id, e.target.value || null)}
+                className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="">Unassigned</option>
+                {members.map(m => (
+                  <option key={m.user_id} value={m.user_id}>{m.display_name}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex flex-col items-center gap-2 mt-6">
@@ -294,6 +335,16 @@ export default function LeadDetailPanel({ lead, onUpdateStatus }: LeadDetailPane
             )}
           </div>
         </div>
+          </div>
+        )}
+
+        {activeTab === 'timeline' && (
+          <LeadTimeline leadId={lead.id} />
+        )}
+
+        {activeTab === 'notes' && (
+          <LeadNotes leadId={lead.id} />
+        )}
       </div>
     </section>
   );

@@ -5,6 +5,7 @@ import LeadListItem from "@/components/LeadListItem";
 import ChatUI from "@/components/ChatUI";
 import LeadDetailPanel from "@/components/LeadDetailPanel";
 import { useLeads } from "@/hooks/useLeads";
+import { useTeam } from "@/hooks/useTeam";
 
 export type LeadStatus = "Hot" | "Warm" | "Cold" | "Converted" | "Lost";
 
@@ -28,6 +29,10 @@ export interface LeadType {
   conversation_state?: string;
   lead_score?: number;
   is_manual_status?: boolean;
+  assigned_to?: string;
+  pipeline_stage?: string;
+  pipeline_updated_at?: string;
+  created_at?: string;
 }
 
 export default function Leads() {
@@ -35,6 +40,8 @@ export default function Leads() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [agentFilter, setAgentFilter] = useState<string>("All");
+  const { members } = useTeam();
 
   const filteredLeads = leads.filter(
     lead => {
@@ -44,8 +51,9 @@ export default function Leads() {
         (lead.phone || '').includes(searchQuery);
       
       const matchesStatus = statusFilter === "All" || lead.status === statusFilter;
+      const matchesAgent = agentFilter === "All" || (agentFilter === "Unassigned" ? !lead.assigned_to : lead.assigned_to === agentFilter);
       
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && matchesAgent;
     }
   );
 
@@ -93,6 +101,17 @@ export default function Leads() {
               <option value="Hot">Hot</option>
               <option value="Warm">Warm</option>
               <option value="Cold">Cold</option>
+            </select>
+            <select 
+              value={agentFilter}
+              onChange={(e) => setAgentFilter(e.target.value)}
+              className="bg-slate-100 border-none rounded-lg px-2 py-1.5 text-[10px] font-bold text-slate-600 outline-none focus:ring-2 focus:ring-wa-green/20"
+            >
+              <option value="All">All Agents</option>
+              <option value="Unassigned">Unassigned</option>
+              {members.map(m => (
+                <option key={m.user_id} value={m.user_id}>{m.display_name}</option>
+              ))}
             </select>
           </div>
         </div>

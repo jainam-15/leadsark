@@ -9,6 +9,8 @@ interface LeadListItemProps {
   unreadCount?: number;
   active?: boolean;
   overdue?: boolean;
+  assigned_to?: string;
+  pipeline_stage?: string;
 }
 
 export default function LeadListItem({
@@ -20,6 +22,8 @@ export default function LeadListItem({
   unreadCount,
   active,
   overdue,
+  assigned_to,
+  pipeline_stage,
 }: LeadListItemProps) {
   return (
     <div className={`relative p-5 border-b border-slate-100 shadow-sm hover:px-6 transition-all duration-300 group cursor-pointer ${
@@ -64,13 +68,25 @@ export default function LeadListItem({
         ) : (
           <span className="text-[10px] text-slate-400 font-semibold">{time}</span>
         )}
-        
-        {unreadCount && unreadCount > 0 && (
-          <div className="flex items-center gap-2">
-            <span className="bg-wa-green text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>
-            <span className="material-symbols-outlined text-wa-green text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>chat_bubble</span>
-          </div>
-        )}
+
+        <div className="flex items-center gap-2">
+          {pipeline_stage && (
+            <span className="text-[8px] font-black uppercase px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded">
+              {pipeline_stage}
+            </span>
+          )}
+          {assigned_to && (
+            <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[8px] font-black text-slate-400" title="Assigned">
+              <span className="material-symbols-outlined text-[10px]">person</span>
+            </div>
+          )}
+          {unreadCount && unreadCount > 0 && (
+            <div className="flex items-center gap-1 bg-wa-green/10 px-1.5 py-0.5 rounded-full">
+              <span className="text-wa-green text-[10px] font-bold">{unreadCount}</span>
+              <span className="material-symbols-outlined text-wa-green text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>chat_bubble</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

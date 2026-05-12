@@ -81,6 +81,10 @@ export function useLeads() {
             automation_paused: dbLead.automation_paused,
             conversation_state: dbLead.conversation_state,
             lead_score: dbLead.lead_score || 0,
+            assigned_to: dbLead.assigned_to,
+            pipeline_stage: dbLead.pipeline_stage,
+            pipeline_updated_at: dbLead.pipeline_updated_at,
+            created_at: dbLead.created_at,
           };
         });
         setLeads(formatted);
@@ -167,5 +171,48 @@ export function useLeads() {
     }
   };
 
-  return { leads, loading, fetchLeads, updateLeadStatus, addLead, toggleLeadField };
+  const assignLead = async (id: string, userId: string | null) => {
+    // Optimistic UI update
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, assigned_to: userId || undefined } : l));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('leads')
+          .update({ 
+            assigned_to: userId, 
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', id);
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error assigning lead:', error);
+        fetchLeads();
+      }
+    }
+  };
+
+  const updatePipelineStage = async (id: string, stage: string) => {
+    // Optimistic UI update
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, pipeline_stage: stage, pipeline_updated_at: new Date().toISOString() } : l));
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('leads')
+          .update({ 
+            pipeline_stage: stage, 
+            pipeline_updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString() 
+          })
+          .eq('id', id);
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error updating pipeline stage:', error);
+        fetchLeads();
+      }
+    }
+  };
+
+  return { leads, loading, fetchLeads, updateLeadStatus, addLead, toggleLeadField, assignLead, updatePipelineStage };
 }

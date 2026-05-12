@@ -77,6 +77,16 @@ export async function ensureUserBusinessSetup(
         .eq('id', userId);
     }
 
+    // 3.5 Create/Update Team Member for Owner
+    await client
+      .from('team_members')
+      .upsert({
+        business_id: businessId,
+        user_id: userId,
+        role: 'owner',
+        display_name: fullName || email.split('@')[0]
+      }, { onConflict: 'business_id,user_id' });
+
     // 4. Initialize Settings
     const { count: settingsCount } = await client
       .from('settings')
