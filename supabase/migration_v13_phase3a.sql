@@ -126,13 +126,17 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Team Members ALL (Admin/Owner)" ON team_members;
 END $$;
 
-CREATE POLICY "Team Members SELECT" ON team_members FOR SELECT USING (business_id = get_user_business_id());
+CREATE POLICY "Team Members SELECT" ON team_members FOR SELECT USING (
+    business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
+);
+
 CREATE POLICY "Team Members ALL (Admin/Owner)" ON team_members FOR ALL USING (
-  business_id = get_user_business_id() AND (
-    EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
-    OR EXISTS (SELECT 1 FROM businesses WHERE id = team_members.business_id AND owner_id = auth.uid())
-    OR is_admin()
-  )
+    business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
+    AND (
+        EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
+        OR EXISTS (SELECT 1 FROM businesses WHERE id = team_members.business_id AND owner_id = auth.uid())
+        OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    )
 );
 
 -- Invitations Policies
@@ -141,13 +145,17 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Invitations ALL (Admin/Owner)" ON invitations;
 END $$;
 
-CREATE POLICY "Invitations SELECT" ON invitations FOR SELECT USING (business_id = get_user_business_id());
+CREATE POLICY "Invitations SELECT" ON invitations FOR SELECT USING (
+    business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
+);
+
 CREATE POLICY "Invitations ALL (Admin/Owner)" ON invitations FOR ALL USING (
-  business_id = get_user_business_id() AND (
-    EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
-    OR EXISTS (SELECT 1 FROM businesses WHERE id = invitations.business_id AND owner_id = auth.uid())
-    OR is_admin()
-  )
+    business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
+    AND (
+        EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
+        OR EXISTS (SELECT 1 FROM businesses WHERE id = invitations.business_id AND owner_id = auth.uid())
+        OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+    )
 );
 
 -- Lead Notes Policies
@@ -156,15 +164,15 @@ DO $$ BEGIN
     DROP POLICY IF EXISTS "Lead Notes INSERT" ON lead_notes;
 END $$;
 
-CREATE POLICY "Lead Notes SELECT" ON lead_notes FOR SELECT USING (business_id = get_user_business_id());
-CREATE POLICY "Lead Notes INSERT" ON lead_notes FOR INSERT WITH CHECK (business_id = get_user_business_id());
+CREATE POLICY "Lead Notes SELECT" ON lead_notes FOR SELECT USING (business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()));
+CREATE POLICY "Lead Notes INSERT" ON lead_notes FOR INSERT WITH CHECK (business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()));
 
 -- Lead Activities Policies
 DO $$ BEGIN
     DROP POLICY IF EXISTS "Lead Activities SELECT" ON lead_activities;
 END $$;
 
-CREATE POLICY "Lead Activities SELECT" ON lead_activities FOR SELECT USING (business_id = get_user_business_id());
+CREATE POLICY "Lead Activities SELECT" ON lead_activities FOR SELECT USING (business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()));
 
 -- Notifications Policies
 DO $$ BEGIN
@@ -180,38 +188,38 @@ DROP POLICY IF EXISTS "Leads SELECT" ON leads;
 DROP POLICY IF EXISTS "Leads ALL" ON leads;
 
 CREATE POLICY "Leads SELECT" ON leads FOR SELECT USING (
-  business_id = get_user_business_id() AND (
+  business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()) AND (
     get_user_role() IN ('owner', 'admin') 
     OR assigned_to = auth.uid()
-    OR is_admin()
+    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   )
 );
 
 CREATE POLICY "Leads ALL" ON leads FOR ALL USING (
-  business_id = get_user_business_id() AND (
+  business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()) AND (
     get_user_role() IN ('owner', 'admin') 
     OR assigned_to = auth.uid()
-    OR is_admin()
+    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   )
 );
 
 -- Refine Messages RLS
 DROP POLICY IF EXISTS "Messages SELECT" ON messages;
 CREATE POLICY "Messages SELECT" ON messages FOR SELECT USING (
-  business_id = get_user_business_id() AND (
+  business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()) AND (
     get_user_role() IN ('owner', 'admin')
     OR EXISTS (SELECT 1 FROM leads WHERE id = messages.lead_id AND (assigned_to = auth.uid()))
-    OR is_admin()
+    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   )
 );
 
 -- Refine Followups RLS
 DROP POLICY IF EXISTS "Followups SELECT" ON followups;
 CREATE POLICY "Followups SELECT" ON followups FOR SELECT USING (
-  business_id = get_user_business_id() AND (
+  business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid()) AND (
     get_user_role() IN ('owner', 'admin')
     OR EXISTS (SELECT 1 FROM leads WHERE id = followups.lead_id AND (assigned_to = auth.uid()))
-    OR is_admin()
+    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   )
 );
 

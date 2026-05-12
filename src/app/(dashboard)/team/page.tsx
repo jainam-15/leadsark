@@ -23,7 +23,8 @@ export default function TeamPage() {
       setInviteEmail("");
       setIsInviteModalOpen(false);
     } else {
-      alert(result.error || "Failed to invite member");
+      alert(result.error || "Failed to invite member. Please check console for details.");
+      console.error("Invite Error Details:", result.error);
     }
   };
 

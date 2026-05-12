@@ -109,7 +109,7 @@ export function useTeam() {
       return { success: true };
     } catch (error: any) {
       console.error('Error inviting member:', error);
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || JSON.stringify(error) };
     }
   };
 
