@@ -149,7 +149,7 @@ export default function TeamPage() {
       {/* Invite Modal */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-[0_20px_50px_rgba(0,0,0,0.2)] animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl p-8 w-[480px] max-w-[95vw] shadow-[0_20px_50px_rgba(0,0,0,0.2)] animate-in zoom-in-95 duration-200 relative">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-black text-slate-900">Invite Team Member</h3>
               <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-600">
@@ -174,28 +174,32 @@ export default function TeamPage() {
                   <button 
                     type="button"
                     onClick={() => setInviteRole('agent')}
-                    className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
                       inviteRole === 'agent' 
                         ? 'border-primary bg-primary/5' 
                         : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-primary mb-2">person</span>
-                    <div className="font-bold text-slate-900">Agent</div>
-                    <div className="text-[10px] text-slate-500">Only assigned leads</div>
+                    <span className="material-symbols-outlined text-primary">person</span>
+                    <div>
+                      <div className="font-bold text-slate-900 leading-tight">Agent</div>
+                      <div className="text-[10px] text-slate-500 leading-tight">Only assigned leads</div>
+                    </div>
                   </button>
                   <button 
                     type="button"
                     onClick={() => setInviteRole('admin')}
-                    className={`p-4 rounded-2xl border-2 transition-all text-left ${
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
                       inviteRole === 'admin' 
                         ? 'border-blue-600 bg-blue-50' 
                         : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-blue-600 mb-2">admin_panel_settings</span>
-                    <div className="font-bold text-slate-900">Admin</div>
-                    <div className="text-[10px] text-slate-500">Full business access</div>
+                    <span className="material-symbols-outlined text-blue-600">admin_panel_settings</span>
+                    <div>
+                      <div className="font-bold text-slate-900 leading-tight">Admin</div>
+                      <div className="text-[10px] text-slate-500 leading-tight">Full business access</div>
+                    </div>
                   </button>
                 </div>
               </div>
