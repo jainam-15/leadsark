@@ -15,6 +15,17 @@ CREATE TABLE IF NOT EXISTS team_members (
   UNIQUE(business_id, user_id)
 );
 
+-- Sync existing owners to team_members
+INSERT INTO team_members (business_id, user_id, role, display_name)
+SELECT 
+    b.id as business_id, 
+    b.owner_id as user_id, 
+    'owner' as role, 
+    COALESCE(p.full_name, 'Owner') as display_name
+FROM businesses b
+JOIN profiles p ON b.owner_id = p.id
+ON CONFLICT (business_id, user_id) DO NOTHING;
+
 -- Invitations
 CREATE TABLE IF NOT EXISTS invitations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -92,35 +103,75 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 -- Helper function for role
 CREATE OR REPLACE FUNCTION get_user_role() 
 RETURNS TEXT AS $$
-  SELECT role FROM public.team_members WHERE user_id = auth.uid() LIMIT 1;
-$$ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public;
+DECLARE
+  v_role TEXT;
+BEGIN
+  -- 1. Check team_members
+  SELECT role INTO v_role FROM public.team_members WHERE user_id = auth.uid() LIMIT 1;
+  
+  -- 2. Fallback to business owner check
+  IF v_role IS NULL THEN
+    IF EXISTS (SELECT 1 FROM public.businesses WHERE owner_id = auth.uid()) THEN
+      v_role := 'owner';
+    END IF;
+  END IF;
+  
+  RETURN v_role;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path = public;
 
 -- Team Members Policies
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Team Members SELECT" ON team_members;
+    DROP POLICY IF EXISTS "Team Members ALL (Admin/Owner)" ON team_members;
+END $$;
+
 CREATE POLICY "Team Members SELECT" ON team_members FOR SELECT USING (business_id = get_user_business_id());
 CREATE POLICY "Team Members ALL (Admin/Owner)" ON team_members FOR ALL USING (
   business_id = get_user_business_id() AND (
     EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
+    OR EXISTS (SELECT 1 FROM businesses WHERE id = team_members.business_id AND owner_id = auth.uid())
     OR is_admin()
   )
 );
 
 -- Invitations Policies
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Invitations SELECT" ON invitations;
+    DROP POLICY IF EXISTS "Invitations ALL (Admin/Owner)" ON invitations;
+END $$;
+
 CREATE POLICY "Invitations SELECT" ON invitations FOR SELECT USING (business_id = get_user_business_id());
 CREATE POLICY "Invitations ALL (Admin/Owner)" ON invitations FOR ALL USING (
   business_id = get_user_business_id() AND (
     EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
+    OR EXISTS (SELECT 1 FROM businesses WHERE id = invitations.business_id AND owner_id = auth.uid())
     OR is_admin()
   )
 );
 
 -- Lead Notes Policies
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Lead Notes SELECT" ON lead_notes;
+    DROP POLICY IF EXISTS "Lead Notes INSERT" ON lead_notes;
+END $$;
+
 CREATE POLICY "Lead Notes SELECT" ON lead_notes FOR SELECT USING (business_id = get_user_business_id());
 CREATE POLICY "Lead Notes INSERT" ON lead_notes FOR INSERT WITH CHECK (business_id = get_user_business_id());
 
 -- Lead Activities Policies
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Lead Activities SELECT" ON lead_activities;
+END $$;
+
 CREATE POLICY "Lead Activities SELECT" ON lead_activities FOR SELECT USING (business_id = get_user_business_id());
 
 -- Notifications Policies
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Notifications SELECT" ON notifications;
+    DROP POLICY IF EXISTS "Notifications UPDATE" ON notifications;
+END $$;
+
 CREATE POLICY "Notifications SELECT" ON notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Notifications UPDATE" ON notifications FOR UPDATE USING (user_id = auth.uid());
 
