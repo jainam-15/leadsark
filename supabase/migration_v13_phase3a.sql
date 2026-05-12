@@ -133,8 +133,7 @@ CREATE POLICY "Team Members SELECT" ON team_members FOR SELECT USING (
 CREATE POLICY "Team Members ALL (Admin/Owner)" ON team_members FOR ALL USING (
     business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
     AND (
-        EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
-        OR EXISTS (SELECT 1 FROM businesses WHERE id = team_members.business_id AND owner_id = auth.uid())
+        get_user_role() IN ('owner', 'admin')
         OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
     )
 );
@@ -152,8 +151,7 @@ CREATE POLICY "Invitations SELECT" ON invitations FOR SELECT USING (
 CREATE POLICY "Invitations ALL (Admin/Owner)" ON invitations FOR ALL USING (
     business_id IN (SELECT business_id FROM profiles WHERE id = auth.uid())
     AND (
-        EXISTS (SELECT 1 FROM team_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin'))
-        OR EXISTS (SELECT 1 FROM businesses WHERE id = invitations.business_id AND owner_id = auth.uid())
+        get_user_role() IN ('owner', 'admin')
         OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
     )
 );
