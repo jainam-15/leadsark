@@ -70,18 +70,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select(`
           *,
-          businesses!profiles_business_id_fkey(id, name),
-          team_members(role)
+          businesses:business_id(id, name)
         `)
         .eq('id', u.id)
         .maybeSingle();
       
       if (profileError) {
-        console.error("[Auth] Profile fetch error:", profileError);
+        console.error("[Auth] Profile fetch error details:", profileError);
         throw profileError;
       }
 
+      // Fetch role separately to avoid complex join issues
+      const { data: teamData } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('user_id', u.id)
+        .maybeSingle();
+
       console.log("[Auth] Raw profile data from DB:", data);
+      console.log("[Auth] Raw team data from DB:", teamData);
 
       if (data) {
         const authProfile: AuthProfile = {
@@ -91,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           business_id: data.business_id, // This is the UUID
           business_name: (data.businesses as any)?.name || '',
           role: data.role || 'user',
-          business_role: (data.team_members as any)?.[0]?.role,
+          business_role: teamData?.role as any,
           email_confirmed: !!u.email_confirmed_at
         };
         
@@ -120,13 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .from('profiles')
             .select(`
               *,
-              businesses!profiles_business_id_fkey(id, name),
-              team_members(role)
+              businesses:business_id(id, name)
             `)
             .eq('id', u.id)
             .single();
           
           if (fetchErr) throw fetchErr;
+
+          const { data: newTeamData } = await supabase
+            .from('team_members')
+            .select('role')
+            .eq('user_id', u.id)
+            .maybeSingle();
 
           if (newData) {
             const authProfile: AuthProfile = {
@@ -136,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               business_id: newData.business_id,
               business_name: (newData.businesses as any)?.name || '',
               role: newData.role || 'user',
-              business_role: (newData.team_members as any)?.[0]?.role,
+              business_role: newTeamData?.role as any,
               email_confirmed: !!u.email_confirmed_at
             };
             console.log("[Auth] Refetched profile after setup:", authProfile);

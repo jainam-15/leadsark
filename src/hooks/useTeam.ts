@@ -85,7 +85,8 @@ export function useTeam() {
   };
 
   const inviteMember = async (email: string, role: 'admin' | 'agent') => {
-    if (!isSupabaseConfigured || !supabase || !profile?.business_id) return { success: false };
+    if (!isSupabaseConfigured || !supabase) return { success: false, error: "Supabase not configured" };
+    if (!profile?.business_id) return { success: false, error: "No business ID found in profile. Please refresh." };
 
     try {
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
