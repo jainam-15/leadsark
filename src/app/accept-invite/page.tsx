@@ -57,17 +57,27 @@ function AcceptInviteContent() {
     
     setLoading(true);
     try {
-      // 1. Create team member
-      const { error: tmError } = await supabase
+      // 1. Check if already a member
+      const { data: existingMember } = await supabase
         .from('team_members')
-        .insert([{
-          business_id: invitation.business_id,
-          user_id: user.id,
-          role: invitation.role,
-          display_name: profile?.full_name || user.email?.split('@')[0]
-        }]);
+        .select('id')
+        .eq('business_id', invitation.business_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (tmError) throw tmError;
+      if (!existingMember) {
+        // Create team member
+        const { error: tmError } = await supabase
+          .from('team_members')
+          .insert([{
+            business_id: invitation.business_id,
+            user_id: user.id,
+            role: invitation.role,
+            display_name: profile?.full_name || user.email?.split('@')[0]
+          }]);
+
+        if (tmError) throw tmError;
+      }
 
       // 2. Mark invitation as accepted
       await supabase
