@@ -116,7 +116,7 @@ export function useTeam() {
 
   const removeMember = async (memberId: string) => {
     if (!isSupabaseConfigured || !supabase) return { success: false };
-    
+
     // Prevent removing owner via UI logic (RLS also handles it)
     const member = members.find(m => m.id === memberId);
     if (member?.role === 'owner') return { success: false, error: "Cannot remove owner" };
@@ -172,14 +172,14 @@ export function useTeam() {
     }
   };
 
-  return { 
-    members, 
-    invitations, 
-    loading, 
-    inviteMember, 
-    removeMember, 
-    updateRole, 
+  return {
+    members,
+    invitations,
+    loading,
+    inviteMember,
+    removeMember,
+    updateRole,
     cancelInvitation,
-    fetchTeam 
+    fetchTeam
   };
 }

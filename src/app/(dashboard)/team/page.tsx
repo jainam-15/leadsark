@@ -40,7 +40,7 @@ export default function TeamPage() {
           <p className="text-slate-500 mt-1">Manage your business team members and roles.</p>
         </div>
         {canManage && (
-          <button 
+          <button
             onClick={() => setIsInviteModalOpen(true)}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-blue-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold"
           >
@@ -72,17 +72,16 @@ export default function TeamPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    member.role === 'owner' ? 'bg-amber-100 text-amber-700' :
-                    member.role === 'admin' ? 'bg-blue-100 text-blue-700' :
-                    'bg-slate-100 text-slate-700'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${member.role === 'owner' ? 'bg-amber-100 text-amber-700' :
+                      member.role === 'admin' ? 'bg-blue-100 text-blue-700' :
+                        'bg-slate-100 text-slate-700'
+                    }`}>
                     {member.role}
                   </span>
-                  
+
                   {canManage && member.role !== 'owner' && member.user_id !== profile?.id && (
                     <div className="flex items-center gap-2">
-                      <select 
+                      <select
                         value={member.role}
                         onChange={(e) => updateRole(member.id, e.target.value as any)}
                         className="bg-slate-100 border-none rounded-lg px-2 py-1 text-xs font-bold text-slate-600 outline-none focus:ring-2 focus:ring-primary/20"
@@ -90,7 +89,7 @@ export default function TeamPage() {
                         <option value="admin">Admin</option>
                         <option value="agent">Agent</option>
                       </select>
-                      <button 
+                      <button
                         onClick={() => {
                           if (confirm("Are you sure you want to remove this member?")) {
                             removeMember(member.id);
@@ -124,14 +123,14 @@ export default function TeamPage() {
                   <div>
                     <h3 className="font-bold text-slate-900">{invite.email}</h3>
                     <p className="text-xs text-slate-500 mt-1">
-                      Role: <span className="uppercase font-bold text-slate-600">{invite.role}</span> • 
+                      Role: <span className="uppercase font-bold text-slate-600">{invite.role}</span> •
                       Expires: {new Date(invite.expires_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 bg-orange-50 px-2 py-1 rounded">Pending</span>
                     {canManage && (
-                      <button 
+                      <button
                         onClick={() => cancelInvitation(invite.id)}
                         className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                         title="Cancel Invitation"
@@ -160,8 +159,8 @@ export default function TeamPage() {
             <form onSubmit={handleInvite} className="space-y-6">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
@@ -172,14 +171,13 @@ export default function TeamPage() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Role</label>
                 <div className="grid grid-cols-2 gap-3">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setInviteRole('agent')}
-                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
-                      inviteRole === 'agent' 
-                        ? 'border-primary bg-primary/5' 
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${inviteRole === 'agent'
+                        ? 'border-primary bg-primary/5'
                         : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
-                    }`}
+                      }`}
                   >
                     <span className="material-symbols-outlined text-primary">person</span>
                     <div>
@@ -187,14 +185,13 @@ export default function TeamPage() {
                       <div className="text-[10px] text-slate-500 leading-tight">Only assigned leads</div>
                     </div>
                   </button>
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setInviteRole('admin')}
-                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${
-                      inviteRole === 'admin' 
-                        ? 'border-blue-600 bg-blue-50' 
+                    className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col gap-1 ${inviteRole === 'admin'
+                        ? 'border-blue-600 bg-blue-50'
                         : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
-                    }`}
+                      }`}
                   >
                     <span className="material-symbols-outlined text-blue-600">admin_panel_settings</span>
                     <div>
@@ -204,7 +201,7 @@ export default function TeamPage() {
                   </button>
                 </div>
               </div>
-              <button 
+              <button
                 type="submit"
                 disabled={isInviting}
                 className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-70"

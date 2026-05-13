@@ -92,8 +92,8 @@ function AcceptInviteContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
+        <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-[400px] min-w-[320px] text-center">
           <span className="material-symbols-outlined text-red-500 text-5xl mb-4">error</span>
           <h1 className="text-2xl font-black text-slate-900 mb-2">Oops!</h1>
           <p className="text-slate-500 mb-6">{error}</p>
@@ -104,8 +104,8 @@ function AcceptInviteContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
+      <div className="bg-white p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-[400px] min-w-[320px] text-center animate-in fade-in zoom-in duration-300">
         <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6 mx-auto">
           <span className="material-symbols-outlined text-4xl">group_add</span>
         </div>
