@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { motion } from "framer-motion";
+import { Eye, EyeOff, Zap } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,7 +50,6 @@ export default function LoginPage() {
       const res = await login(email, password);
 
       if (res.error) {
-        // Special handling for email confirmation
         if (res.error.message === "Email not confirmed") {
           router.replace("/verify-email");
           return;
@@ -57,7 +59,6 @@ export default function LoginPage() {
       
       if (res.success) {
         setSuccess(true);
-        // Role-based redirection is handled here based on the result from the provider
         if (res.role === 'admin') {
           router.replace("/admin");
         } else {
@@ -77,125 +78,129 @@ export default function LoginPage() {
       router.push("/dashboard");
       return;
     }
-    
     setEmail("demo@leadsark.com");
     setPassword("demo123");
-    
-    // We don't automatically submit to let the user see the credentials
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden transition-colors duration-300">
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeSwitcher />
+      </div>
 
-      <div className="glass-panel w-full max-w-[448px] p-8 rounded-2xl z-10">
+      {/* Background decoration */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-500/20 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-lighten pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-lighten pointer-events-none"></div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="glass-panel w-full max-w-[448px] p-8 rounded-3xl z-10"
+      >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg">
-            <span className="material-symbols-outlined">rocket_launch</span>
+          <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-teal-500/30">
+            <Zap size={24} fill="currentColor" />
           </div>
-          <h1 className="text-2xl font-h2 font-black text-slate-900">Welcome to LeadsArk</h1>
-          <p className="text-sm text-slate-500 mt-2">Sign in to your account</p>
+          <h1 className="text-2xl font-black text-foreground">Welcome to LeadsArk</h1>
+          <p className="text-sm text-foreground/60 mt-2">Sign in to your account</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2">
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-xl flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">error</span>
             {error}
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-wa-green/10 border border-wa-green/20 text-wa-green text-sm rounded-lg flex items-center gap-2 font-bold">
+          <div className="mb-4 p-3 bg-teal-500/10 border border-teal-500/20 text-teal-600 dark:text-teal-400 text-sm rounded-xl flex items-center gap-2 font-bold">
             <span className="material-symbols-outlined text-[18px]">check_circle</span>
             Login successful! Redirecting...
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">Email</label>
+            <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wide mb-2">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
+              className="w-full px-4 py-3 bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm"
               placeholder="you@company.com"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">Password</label>
+            <label className="block text-xs font-bold text-foreground/80 uppercase tracking-wide mb-2">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm pr-12"
+                className="w-full px-4 py-3 bg-surface border border-border text-foreground rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition-all text-sm pr-12"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground transition-colors"
               >
-                <span className="material-symbols-outlined text-xl">
-                  {showPassword ? "visibility_off" : "visibility"}
-                </span>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-              <input type="checkbox" className="rounded text-teal-600 focus:ring-teal-500" />
+          <div className="flex items-center justify-between mt-2">
+            <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+              <input type="checkbox" className="rounded text-teal-500 focus:ring-teal-500 bg-surface border-border" />
               <span>Remember me</span>
             </label>
-            <Link href="#" className="text-sm font-semibold text-teal-600 hover:text-teal-700">Forgot password?</Link>
+            <Link href="#" className="text-sm font-semibold text-teal-600 dark:text-teal-400 hover:text-teal-500 transition-colors">Forgot password?</Link>
           </div>
 
           <button
             type="submit"
             disabled={loading || success}
-            className="w-full py-3 bg-slate-900 text-white rounded-xl shadow-lg hover:shadow-slate-500/30 transition-all font-black text-sm uppercase tracking-widest mt-6 disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full py-3.5 bg-foreground text-background rounded-xl shadow-lg shadow-foreground/10 hover:shadow-foreground/20 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold text-sm uppercase tracking-widest mt-8 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin"></div>
                 Signing in...
               </div>
             ) : success ? "Redirecting..." : "Sign In"}
           </button>
         </form>
 
-        <div className="mt-6">
+        <div className="mt-8">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-slate-500 rounded-full">Or continue with</span>
+              <span className="px-3 bg-background text-foreground/50 rounded-full font-medium">Or continue with</span>
             </div>
           </div>
           
           <button
             onClick={handleDemoLogin}
-            className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-wa-green/10 text-wa-green rounded-xl border border-wa-green/20 hover:bg-wa-green/20 transition-all font-bold text-sm uppercase tracking-wider"
+            className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-surface text-foreground rounded-xl border border-border hover:bg-surface-hover transition-all font-bold text-sm uppercase tracking-wider"
           >
-            <span className="material-symbols-outlined text-[18px]">bolt</span>
+            <Zap size={16} className="text-teal-500" />
             Demo Login
           </button>
         </div>
 
-        <p className="mt-8 text-center text-sm text-slate-600">
+        <p className="mt-8 text-center text-sm text-foreground/60">
           Don't have an account?{' '}
-          <Link href="/register" className="font-bold text-teal-600 hover:text-teal-700 transition-colors">
+          <Link href="/register" className="font-bold text-teal-600 dark:text-teal-400 hover:text-teal-500 transition-colors">
             Sign up
           </Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #00685F;
+  --color-primary: var(--primary);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-glass-border: var(--glass-border);
   --color-wa-green: #25D366;
   --color-wa-light: #DCF8C6;
   
-  --color-surface-container-low: #f0f5f2;
-  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: var(--surface);
+  --color-surface-container-lowest: var(--background);
   --color-error: #ba1a1a;
 
   --spacing-md: 24px;
@@ -54,19 +60,41 @@
 }
 
 @layer base {
+  :root {
+    --background: #fdfdfc;
+    --foreground: #111827;
+    --surface: #ffffff;
+    --surface-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --primary: #000000;
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --glass-bg: rgba(255, 255, 255, 0.65);
+  }
+
+  .dark {
+    --background: #000000;
+    --foreground: #ffffff;
+    --surface: #111111;
+    --surface-hover: #222222;
+    --border: #333333;
+    --primary: #ffffff;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(20, 20, 20, 0.65);
+  }
+
   body {
-    background-color: #F8FAFC;
-    color: #111827;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
 
 @layer components {
   .glass-panel {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 10px 30px -5px rgba(55, 48, 163, 0.08);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
   }
   
   .custom-scrollbar::-webkit-scrollbar {
